@@ -1,0 +1,34 @@
+{
+	"name": "storygraph",
+	"private": true,
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"type": "module",
+	"scripts": {
+		"dev": "turbo dev",
+		"build": "turbo build",
+		"check-types": "turbo check-types",
+		"dev:native": "turbo -F native dev",
+		"dev:web": "turbo -F web dev",
+		"dev:server": "turbo -F @storygraph/backend dev",
+		"dev:setup": "turbo -F @storygraph/backend dev:setup",
+		"deploy": "turbo -F @storygraph/infra deploy",
+		"destroy": "turbo -F @storygraph/infra destroy",
+		"check": "biome check --write ."
+	},
+	"dependencies": {
+		"@storygraph/env": "workspace:*",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.2.0",
+		"@cloudflare/workers-types": "^4.20251213.0",
+		"@storygraph/config": "workspace:*",
+		"turbo": "^2.6.3",
+		"typescript": "catalog:"
+	},
+	"packageManager": "pnpm@10.27.0"
+}

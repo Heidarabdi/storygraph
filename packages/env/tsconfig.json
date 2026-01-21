@@ -1,0 +1,3 @@
+{
+	"extends": "@storygraph/config/tsconfig.base.json"
+}

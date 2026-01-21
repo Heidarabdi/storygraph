@@ -1,0 +1,19 @@
+{
+	"name": "@storygraph/infra",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev:dev": "alchemy dev",
+		"deploy": "alchemy deploy",
+		"destroy": "alchemy destroy"
+	},
+	"dependencies": {
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@storygraph/config": "workspace:*",
+		"alchemy": "catalog:",
+		"typescript": "catalog:"
+	}
+}
