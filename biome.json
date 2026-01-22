@@ -41,7 +41,8 @@
 				"noLabelWithoutControl": "off"
 			},
 			"suspicious": {
-				"noExplicitAny": "warn"
+				"noExplicitAny": "warn",
+				"noArrayIndexKey": "warn"
 			},
 			"correctness": {
 				"useExhaustiveDependencies": "info"

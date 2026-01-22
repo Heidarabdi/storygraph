@@ -31,7 +31,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "My App",
+				title: "Storygraph",
 			},
 		],
 		links: [
@@ -49,7 +49,7 @@ function RootDocument() {
 	const { convexQueryClient } = Route.useRouteContext();
 	return (
 		<ConvexProvider client={convexQueryClient.convexClient}>
-			<html lang="en" className="dark">
+			<html lang="en">
 				<head>
 					<HeadContent />
 				</head>
