@@ -11,6 +11,8 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ConvexProvider } from "convex/react";
 
+import { ThemeProvider } from "next-themes";
+
 import { Toaster } from "@/components/ui/sonner";
 
 import Header from "../components/header";
@@ -51,32 +53,38 @@ function RootDocument() {
 	const matches = useMatches();
 
 	// Check if we're on an auth route - auth routes have their own full-screen layout
-	const isAuthRoute = matches.some(match => match.pathname.startsWith("/auth"));
+	const isAuthRoute = matches.some((match) =>
+		match.pathname.startsWith("/auth"),
+	);
 
 	return (
 		<ConvexProvider client={convexQueryClient.convexClient}>
-			<html lang="en">
-				<head>
-					<HeadContent />
-				</head>
-				<body>
-					{isAuthRoute ? (
-						// Auth routes: full-screen layout without header
-						<div className="h-svh overflow-auto">
-							<Outlet />
-						</div>
-					) : (
-						// App routes: header + content
-						<div className="grid h-svh grid-rows-[auto_1fr]">
-							<Header />
-							<Outlet />
-						</div>
-					)}
-					<Toaster richColors />
-					<TanStackRouterDevtools position="bottom-left" />
-					<Scripts />
-				</body>
-			</html>
+			<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+				<html lang="en">
+					<head>
+						<HeadContent />
+					</head>
+					<body>
+						{isAuthRoute ? (
+							// Auth routes: full-screen layout without header
+							<div className="flex h-svh flex-col overflow-x-hidden">
+								<Outlet />
+							</div>
+						) : (
+							// App routes: header + content
+							<div className="flex h-svh flex-col overflow-x-hidden">
+								<Header />
+								<main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+									<Outlet />
+								</main>
+							</div>
+						)}
+						<Toaster richColors />
+						<TanStackRouterDevtools position="bottom-left" />
+						<Scripts />
+					</body>
+				</html>
+			</ThemeProvider>
 		</ConvexProvider>
 	);
 }
