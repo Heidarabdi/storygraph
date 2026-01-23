@@ -6,6 +6,7 @@ import {
 	HeadContent,
 	Outlet,
 	Scripts,
+	useMatches,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ConvexProvider } from "convex/react";
@@ -47,6 +48,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
 	const { convexQueryClient } = Route.useRouteContext();
+	const matches = useMatches();
+
+	// Check if we're on an auth route - auth routes have their own full-screen layout
+	const isAuthRoute = matches.some(match => match.pathname.startsWith("/auth"));
+
 	return (
 		<ConvexProvider client={convexQueryClient.convexClient}>
 			<html lang="en">
@@ -54,10 +60,18 @@ function RootDocument() {
 					<HeadContent />
 				</head>
 				<body>
-					<div className="grid h-svh grid-rows-[auto_1fr]">
-						<Header />
-						<Outlet />
-					</div>
+					{isAuthRoute ? (
+						// Auth routes: full-screen layout without header
+						<div className="h-svh overflow-auto">
+							<Outlet />
+						</div>
+					) : (
+						// App routes: header + content
+						<div className="grid h-svh grid-rows-[auto_1fr]">
+							<Header />
+							<Outlet />
+						</div>
+					)}
 					<Toaster richColors />
 					<TanStackRouterDevtools position="bottom-left" />
 					<Scripts />

@@ -26,10 +26,13 @@ export const Route = createFileRoute("/auth/signup")({
                     </div>
                     <div className="group space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-focus-within:text-primary transition-colors">Surname</label>
-                        <Input
-                            className="rounded-none border-0 border-b border-border bg-transparent px-0 py-3 focus-visible:ring-0 focus-visible:border-primary text-sm shadow-none"
-                            placeholder="Thorne"
-                        />
+                        <div className="relative">
+                            <Input
+                                className="rounded-none border-0 border-b border-border bg-transparent px-8 py-3 focus-visible:ring-0 focus-visible:border-primary text-sm shadow-none"
+                                placeholder="Thorne"
+                            />
+                            <User size={14} className="absolute left-0 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        </div>
                     </div>
                 </div>
 

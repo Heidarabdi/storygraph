@@ -309,7 +309,7 @@ function EditorPage() {
                                             {[
                                                 { name: 'Noir 35', color: 'bg-neutral-900' },
                                                 { name: 'Velvia 50', color: 'bg-blue-900' },
-                                                { name: 'Matte Pain', color: 'bg-amber-100' },
+                                                { name: 'Matte Paint', color: 'bg-amber-100' },
                                                 { name: 'Digital', color: 'bg-emerald-500' }
                                             ].map((style) => (
                                                 <button key={style.name} className="flex flex-col items-center gap-3 group">

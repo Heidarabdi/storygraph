@@ -14,8 +14,7 @@ export default function Header() {
 	const publicRoutes = ["/", "/pricing"];
 	const isPublicPage = publicRoutes.includes(pathname) || pathname.startsWith("/auth");
 
-	const navLinkClass = (path: string) => `text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${pathname === path ? "text-primary" : "text-muted-foreground hover:text-primary"
-		}`;
+	const navLinkClass = (path: string) => `text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${pathname === path ? "text-primary" : "text-muted-foreground hover:text-primary"}`;
 
 	return (
 		<header className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border bg-background/90 px-6 backdrop-blur-md">
@@ -37,9 +36,9 @@ export default function Header() {
 							<Link to="/pricing" className={navLinkClass("/pricing")}>
 								Pricing
 							</Link>
-							<button className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-primary opacity-50 cursor-not-allowed">
+							<span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 cursor-not-allowed">
 								Showcase
-							</button>
+							</span>
 						</>
 					) : (
 						<>
@@ -49,9 +48,9 @@ export default function Header() {
 							<Link to="/library" className={navLinkClass("/library")}>
 								Library
 							</Link>
-							<button className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-primary opacity-50 cursor-not-allowed">
+							<Link to="/team" className={navLinkClass("/team")}>
 								Team
-							</button>
+							</Link>
 						</>
 					)}
 				</nav>

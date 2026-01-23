@@ -48,8 +48,8 @@ function LandingPage() {
 
 					<div className="flex animate-in fade-in slide-in-from-bottom-10 duration-1000 items-center gap-6">
 						<Link to="/auth/signup">
-							<Button className="h-16 rounded-none bg-primary px-12 text-[11px] font-bold uppercase tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-black hover:translate-y-[-2px]">
-								Start Creating
+							<Button className="h-16 rounded-none bg-primary px-12 text-[11px] font-bold uppercase tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-black hover:translate-y-[-2px] justify-center">
+								<span>Start Creating</span>
 								<ChevronRight size={16} className="ml-2" />
 							</Button>
 						</Link>
@@ -240,8 +240,8 @@ function LandingPage() {
 					</div>
 					<h2 className="mb-12 font-serif text-5xl italic text-primary md:text-7xl leading-tight">Master the Art of <br />Visual Continuity.</h2>
 					<Link to="/auth/signup">
-						<Button className="h-20 rounded-none bg-primary px-20 text-sm font-bold uppercase tracking-[0.3em] text-white shadow-2xl hover:bg-black group transition-all">
-							Join the Collective
+						<Button className="h-20 rounded-none bg-primary px-20 text-sm font-bold uppercase tracking-[0.3em] text-white shadow-2xl hover:bg-black group transition-all justify-center">
+							<span>Join the Collective</span>
 							<ChevronRight size={18} className="ml-4 group-hover:translate-x-2 transition-transform" />
 						</Button>
 					</Link>

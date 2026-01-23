@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Mail, CheckCircle2, ArrowRight } from "lucide-react";
+import { Mail, CheckCircle2, ArrowRight, RefreshCw } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +11,33 @@ export const Route = createFileRoute("/auth/verify-email")({
 
 function VerifyEmailPage() {
     const [isVerified, setIsVerified] = useState(false);
+    const [isResending, setIsResending] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+
+    const handleResendEmail = async () => {
+        if (resendCooldown > 0 || isResending) return;
+
+        setIsResending(true);
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        setIsResending(false);
+
+        toast.success("Verification email dispatched", {
+            description: "Please check your inbox and spam folder.",
+        });
+
+        // Start 60-second cooldown
+        setResendCooldown(60);
+        const interval = setInterval(() => {
+            setResendCooldown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
 
     return (
         <div className="flex flex-col items-center text-center space-y-8">
@@ -52,9 +80,25 @@ function VerifyEmailPage() {
                             Manually Verify (Mock)
                         </Button>
 
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-50">
-                            Didn't receive the email? <button className="text-primary hover:underline">Resend</button>
-                        </p>
+                        <div className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                            <span className="opacity-50">Didn't receive the email?</span>
+                            <button
+                                onClick={handleResendEmail}
+                                disabled={isResending || resendCooldown > 0}
+                                className="inline-flex items-center gap-1.5 text-primary hover:underline disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                            >
+                                {isResending ? (
+                                    <>
+                                        <RefreshCw size={12} className="animate-spin" />
+                                        Sending...
+                                    </>
+                                ) : resendCooldown > 0 ? (
+                                    <>Resend in {resendCooldown}s</>
+                                ) : (
+                                    <>Resend Email</>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <Link to="/auth/login" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
