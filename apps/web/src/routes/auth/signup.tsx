@@ -27,7 +27,12 @@ function SignupPage() {
 			// We pass name as metadata if needed, but standard auth might just take name if configured
 			// Or we can update the profile later. For now, we'll just start the session.
 			// Ideally, we'd pass { name: `${firstName} ${surname}` } if the provider supports it or update it immediately.
-			await signIn("password", { email, password, flow: "signUp", name: `${firstName} ${surname}` });
+			await signIn("password", {
+				email,
+				password,
+				flow: "signUp",
+				name: `${firstName} ${surname}`,
+			});
 			await router.navigate({ to: "/dashboard" });
 		} catch (error) {
 			toast.error("Could not create membership. Please try again.");
@@ -161,7 +166,7 @@ function SignupPage() {
 
 			<div className="relative my-6">
 				<div className="absolute inset-0 flex items-center">
-					<span className="w-full border-t border-muted/20" />
+					<span className="w-full border-muted/20 border-t" />
 				</div>
 				<div className="relative flex justify-center text-[9px] uppercase tracking-widest">
 					<span className="bg-background px-2 text-muted-foreground">Or</span>

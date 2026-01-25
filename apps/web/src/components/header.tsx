@@ -1,17 +1,31 @@
+import { useAuthActions } from "@convex-dev/auth/react";
+import { api } from "@storygraph/backend/convex/_generated/api";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useConvexAuth, useQuery } from "convex/react";
 import {
 	Bell,
 	Brush,
 	ChevronRight,
+	LogOut,
 	Menu,
 	Moon,
+	Settings,
 	Share2,
 	Sun,
+	User,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import NotificationPanel from "@/components/NotificationPanel";
 import { Button } from "@/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import {
 	Sheet,
@@ -20,9 +34,14 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Header() {
 	const routerState = useRouterState();
+	const { isAuthenticated } = useConvexAuth();
+	const { signOut } = useAuthActions();
+	const viewer = useQuery(api.users.viewer);
+
 	const pathname = routerState.location.pathname;
 	const isEditorPage = pathname.includes("/editor");
 	const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -36,11 +55,6 @@ export default function Header() {
 	}, []);
 
 	const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
-
-	// Public routes that should show the public nav
-	const publicRoutes = ["/", "/pricing"];
-	const isPublicPage =
-		publicRoutes.includes(pathname) || pathname.startsWith("/auth");
 
 	const navLinkClass = (path: string) =>
 		`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${
@@ -107,7 +121,7 @@ export default function Header() {
 
 		return (
 			<>
-				{isPublicPage ? (
+				{!isAuthenticated ? (
 					<>
 						<LinkComponent to="/" label="Story" />
 						<LinkComponent to="/pricing" label="Pricing" />
@@ -147,7 +161,7 @@ export default function Header() {
 							</SheetHeader>
 							<nav className="flex flex-1 flex-col">
 								<NavLinks mobile />
-								{!isPublicPage && (
+								{isAuthenticated && (
 									<Link
 										to="/settings"
 										className={mobileNavLinkClass("/settings")}
@@ -176,7 +190,7 @@ export default function Header() {
 
 				{/* Right: Actions */}
 				<div className="flex items-center gap-2 md:gap-4">
-					{isPublicPage ? (
+					{!isAuthenticated ? (
 						<div className="flex items-center gap-3 md:gap-4">
 							<button
 								onClick={toggleTheme}
@@ -239,18 +253,74 @@ export default function Header() {
 
 							<Separator orientation="vertical" className="h-4 bg-border" />
 
-							<Link
-								to="/settings"
-								className="flex items-center transition-opacity hover:opacity-80"
-							>
-								<div className="flex h-9 w-9 items-center justify-center overflow-hidden bg-primary shadow-sm ring-1 ring-border/50 md:h-10 md:w-10">
-									<img
-										src="https://api.dicebear.com/7.x/avataaars/svg?seed=Julian"
-										alt="Profile"
-										className="h-full w-full object-cover opacity-90"
-									/>
-								</div>
-							</Link>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<button className="flex items-center gap-3 transition-opacity hover:opacity-80">
+										<div className="flex h-9 w-9 items-center justify-center overflow-hidden bg-primary shadow-sm ring-1 ring-border/50 md:h-10 md:w-10">
+											{viewer?.image ? (
+												<img
+													src={viewer.image}
+													alt={viewer.name || "Profile"}
+													className="h-full w-full object-cover opacity-90"
+												/>
+											) : (
+												<div className="flex h-full w-full items-center justify-center text-primary-foreground">
+													<User size={20} />
+												</div>
+											)}
+										</div>
+										<div className="hidden flex-col items-start pr-2 md:flex">
+											{viewer ? (
+												<>
+													<span className="font-bold text-[10px] text-foreground uppercase tracking-wider">
+														{viewer.name || "Director"}
+													</span>
+													<span className="text-[9px] text-muted-foreground uppercase tracking-widest">
+														Master Plotter
+													</span>
+												</>
+											) : (
+												<Skeleton className="h-4 w-20" />
+											)}
+										</div>
+									</button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent
+									align="end"
+									className="w-56 rounded-none border-border"
+								>
+									<DropdownMenuLabel className="font-bold text-[10px] uppercase tracking-widest">
+										Account
+									</DropdownMenuLabel>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem asChild>
+										<Link
+											to="/settings"
+											className="flex w-full cursor-pointer items-center gap-2 font-bold text-[10px] uppercase tracking-widest"
+										>
+											<User size={14} />
+											Profile
+										</Link>
+									</DropdownMenuItem>
+									<DropdownMenuItem asChild>
+										<Link
+											to="/settings"
+											className="flex w-full cursor-pointer items-center gap-2 font-bold text-[10px] uppercase tracking-widest"
+										>
+											<Settings size={14} />
+											Settings
+										</Link>
+									</DropdownMenuItem>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem
+										onClick={() => signOut()}
+										className="flex cursor-pointer items-center gap-2 font-bold text-[10px] text-red-600 uppercase tracking-widest"
+									>
+										<LogOut size={14} />
+										Terminate Session
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
 						</>
 					)}
 				</div>

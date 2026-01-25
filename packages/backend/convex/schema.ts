@@ -1,6 +1,6 @@
+import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
 /**
  * Storygraph schema — org-based multi-tenant model.
@@ -14,34 +14,34 @@ const subscriptionTier = v.union(
 	v.literal("prototyping"),
 	v.literal("director"),
 	v.literal("studio"),
-	v.literal("enterprise")
+	v.literal("enterprise"),
 );
 
 const orgMemberRole = v.union(
 	v.literal("admin"),
 	v.literal("member"),
-	v.literal("viewer")
+	v.literal("viewer"),
 );
 
 const orgPlan = v.union(
 	v.literal("prototyping"),
 	v.literal("director"),
 	v.literal("studio"),
-	v.literal("enterprise")
+	v.literal("enterprise"),
 );
 
 const assetType = v.union(
 	v.literal("character"),
 	v.literal("environment"),
 	v.literal("prop"),
-	v.literal("style")
+	v.literal("style"),
 );
 
 const frameStatus = v.union(
 	v.literal("pending"),
 	v.literal("generating"),
 	v.literal("complete"),
-	v.literal("failed")
+	v.literal("failed"),
 );
 
 const activityResourceType = v.union(
@@ -50,7 +50,7 @@ const activityResourceType = v.union(
 	v.literal("asset"),
 	v.literal("scene"),
 	v.literal("frame"),
-	v.literal("user")
+	v.literal("user"),
 );
 
 // -----------------------------------------------------------------------------
@@ -103,8 +103,7 @@ export default defineSchema({
 		description: v.optional(v.string()),
 		thumbnail: v.optional(v.string()), // storage ID or URL
 		isPublic: v.optional(v.boolean()),
-	})
-		.index("by_org", ["orgId"]),
+	}).index("by_org", ["orgId"]),
 
 	assets: defineTable({
 		projectId: v.id("projects"),
@@ -140,8 +139,8 @@ export default defineSchema({
 					imageUrl: v.optional(v.string()),
 					model: v.optional(v.string()),
 					finishedAt: v.number(),
-				})
-			)
+				}),
+			),
 		),
 	})
 		.index("by_scene", ["sceneId"])
@@ -157,7 +156,9 @@ export default defineSchema({
 		parameters: v.optional(v.any()),
 		cost: v.optional(v.number()),
 		durationMs: v.optional(v.number()),
-		status: v.optional(v.union(v.literal("pending"), v.literal("complete"), v.literal("failed"))),
+		status: v.optional(
+			v.union(v.literal("pending"), v.literal("complete"), v.literal("failed")),
+		),
 		resultStorageId: v.optional(v.string()),
 	})
 		.index("by_frame", ["frameId"])

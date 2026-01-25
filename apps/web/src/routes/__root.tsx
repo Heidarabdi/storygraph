@@ -1,6 +1,6 @@
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import type { ConvexQueryClient } from "@convex-dev/react-query";
 import type { QueryClient } from "@tanstack/react-query";
-
 import {
 	createRootRouteWithContext,
 	HeadContent,
@@ -9,7 +9,6 @@ import {
 	useMatches,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { ConvexAuthProvider } from "@convex-dev/auth/react";
 
 import { ThemeProvider } from "next-themes";
 
