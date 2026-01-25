@@ -9,7 +9,7 @@ import {
 	useMatches,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { ConvexProvider } from "convex/react";
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
 
 import { ThemeProvider } from "next-themes";
 
@@ -58,7 +58,7 @@ function RootDocument() {
 	);
 
 	return (
-		<ConvexProvider client={convexQueryClient.convexClient}>
+		<ConvexAuthProvider client={convexQueryClient.convexClient}>
 			<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 				<html lang="en">
 					<head>
@@ -85,6 +85,6 @@ function RootDocument() {
 					</body>
 				</html>
 			</ThemeProvider>
-		</ConvexProvider>
+		</ConvexAuthProvider>
 	);
 }

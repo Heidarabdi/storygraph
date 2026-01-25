@@ -1,11 +1,38 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ChevronRight, Lock, Mail } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/auth/login")({
-	component: () => (
+	component: LoginPage,
+});
+
+function LoginPage() {
+	const router = useRouter();
+	const { signIn } = useAuthActions();
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+
+	const [loading, setLoading] = useState(false);
+
+	const handleSignIn = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setLoading(true);
+		try {
+			await signIn("password", { email, password, flow: "signIn" });
+			await router.navigate({ to: "/dashboard" });
+			// Ideally ConvexAuth handles the token and the router context updates.
+		} catch (error) {
+			toast.error("Authentication failed. Check your credentials.");
+			setLoading(false);
+		}
+	};
+
+	return (
 		<div className="fade-in slide-in-from-bottom-4 animate-in space-y-8 duration-700">
 			<div className="space-y-2 text-center">
 				<h2 className="font-serif text-3xl text-foreground italic">
@@ -16,7 +43,7 @@ export const Route = createFileRoute("/auth/login")({
 				</p>
 			</div>
 
-			<form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+			<form className="space-y-6" onSubmit={handleSignIn}>
 				<div className="space-y-4">
 					<div className="group space-y-2">
 						<label className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-colors group-focus-within:text-primary">
@@ -25,8 +52,12 @@ export const Route = createFileRoute("/auth/login")({
 						<div className="relative">
 							<Input
 								type="email"
+								name="email"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
 								className="rounded-none border-0 border-border border-b bg-transparent px-8 py-3 text-foreground text-sm shadow-none placeholder:text-muted-foreground/30 focus-visible:border-primary focus-visible:ring-0"
 								placeholder="director@studio.com"
+								required
 							/>
 							<Mail
 								size={14}
@@ -51,8 +82,12 @@ export const Route = createFileRoute("/auth/login")({
 						<div className="relative">
 							<Input
 								type="password"
+								name="password"
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
 								className="rounded-none border-0 border-border border-b bg-transparent px-8 py-3 text-foreground text-sm shadow-none placeholder:text-muted-foreground/30 focus-visible:border-primary focus-visible:ring-0"
 								placeholder="••••••••"
+								required
 							/>
 							<Lock
 								size={14}
@@ -71,12 +106,34 @@ export const Route = createFileRoute("/auth/login")({
 					</span>
 				</div>
 
-				<Button className="group h-14 w-full rounded-none bg-primary font-bold text-[11px] text-primary-foreground uppercase tracking-[0.3em] shadow-2xl transition-all hover:bg-accent hover:text-primary-foreground">
-					Authenticate
+				<Button
+					type="submit"
+					disabled={loading}
+					className="group h-14 w-full rounded-none bg-primary font-bold text-[11px] text-primary-foreground uppercase tracking-[0.3em] shadow-2xl transition-all hover:bg-accent hover:text-primary-foreground"
+				>
+					{loading ? "Authenticating..." : "Authenticate"}
 					<ChevronRight
 						size={16}
 						className="ml-3 transition-transform group-hover:translate-x-1"
 					/>
+				</Button>
+
+				<div className="relative my-4">
+					<div className="absolute inset-0 flex items-center">
+						<span className="w-full border-t border-muted/20" />
+					</div>
+					<div className="relative flex justify-center text-[9px] uppercase tracking-widest">
+						<span className="bg-background px-2 text-muted-foreground">Or</span>
+					</div>
+				</div>
+
+				<Button
+					type="button"
+					variant="outline"
+					className="group h-12 w-full rounded-none border-muted-foreground/20 font-bold text-[10px] uppercase tracking-[0.2em] transition-all hover:border-primary hover:text-primary"
+					onClick={() => signIn("google")}
+				>
+					Continue with Google
 				</Button>
 			</form>
 
@@ -92,5 +149,5 @@ export const Route = createFileRoute("/auth/login")({
 				</p>
 			</div>
 		</div>
-	),
-});
+	);
+}

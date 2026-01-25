@@ -10,7 +10,9 @@
 	},
 	"dependencies": {
 		"@ai-sdk/google": "^2.0.52",
+		"@auth/core": "catalog:",
 		"@convex-dev/agent": "catalog:",
+		"@convex-dev/auth": "catalog:",
 		"ai": "^5.0.117",
 		"convex": "catalog:",
 		"dotenv": "catalog:",
