@@ -40,11 +40,15 @@ export default function TeamSettings() {
 								</select>
 								<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
 									<svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+										<title>Dropdown Arrow</title>
 										<path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
 									</svg>
 								</div>
 							</div>
-							<button className="w-full bg-primary px-8 py-3 font-bold text-[10px] text-primary-foreground uppercase tracking-widest shadow-lg transition-all hover:bg-neutral-800 sm:w-auto">
+							<button
+								className="w-full bg-primary px-8 py-3 font-bold text-[10px] text-primary-foreground uppercase tracking-widest shadow-lg transition-all hover:bg-neutral-800 sm:w-auto"
+								type="button"
+							>
 								Send Invite
 							</button>
 						</div>
@@ -60,9 +64,9 @@ export default function TeamSettings() {
 						</span>
 					</h3>
 					<div className="space-y-4">
-						{teamMembers.map((member, i) => (
+						{teamMembers.map((member) => (
 							<div
-								key={i}
+								key={member.name}
 								className="group flex items-center justify-between border border-border bg-card p-5 transition-colors hover:border-accent"
 							>
 								<div className="flex min-w-0 items-center gap-4">
@@ -84,7 +88,7 @@ export default function TeamSettings() {
 									</div>
 								</div>
 								<span
-									className={`hidden font-bold text-[9px] uppercase tracking-widest sm:inline md:text-[10px] ${i === 0 ? "text-accent" : "text-muted-foreground"}`}
+									className={`hidden font-bold text-[9px] uppercase tracking-widest sm:inline md:text-[10px] ${member.status === "Active" ? "text-accent" : "text-muted-foreground"}`}
 								>
 									{member.status}
 								</span>

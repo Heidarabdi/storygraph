@@ -168,7 +168,10 @@ function TeamPage() {
 									<div className="flex items-center gap-4">
 										<DropdownMenu>
 											<DropdownMenuTrigger asChild>
-												<button className="flex h-10 w-10 items-center justify-center text-muted-foreground/40 transition-colors hover:text-primary">
+												<button
+													className="flex h-10 w-10 items-center justify-center text-muted-foreground/40 transition-colors hover:text-primary"
+													type="button"
+												>
 													<MoreVertical size={18} strokeWidth={1.5} />
 												</button>
 											</DropdownMenuTrigger>

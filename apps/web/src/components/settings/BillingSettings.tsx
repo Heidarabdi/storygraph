@@ -82,10 +82,16 @@ export default function BillingSettings() {
 							<div className="h-full bg-primary" style={{ width: "45%" }} />
 						</div>
 						<div className="flex flex-col gap-3 pt-4 sm:flex-row md:gap-4">
-							<button className="w-full bg-primary px-6 py-2.5 font-bold text-[10px] text-primary-foreground uppercase tracking-widest transition-all hover:bg-neutral-800 sm:w-auto">
+							<button
+								className="w-full bg-primary px-6 py-2.5 font-bold text-[10px] text-primary-foreground uppercase tracking-widest transition-all hover:bg-neutral-800 sm:w-auto"
+								type="button"
+							>
 								Add Credits
 							</button>
-							<button className="w-full border border-border px-6 py-2.5 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-all hover:bg-muted hover:text-foreground sm:w-auto">
+							<button
+								className="w-full border border-border px-6 py-2.5 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-all hover:bg-muted hover:text-foreground sm:w-auto"
+								type="button"
+							>
 								Change Plan
 							</button>
 						</div>
@@ -103,7 +109,10 @@ export default function BillingSettings() {
 								Billing History
 							</h2>
 						</div>
-						<button className="flex items-center gap-2 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary">
+						<button
+							className="flex items-center gap-2 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary"
+							type="button"
+						>
 							<span className="hidden sm:inline">Export All</span>
 							<Download size={14} />
 						</button>
@@ -128,7 +137,10 @@ export default function BillingSettings() {
 							</thead>
 							<tbody className="divide-y divide-border">
 								{billingHistory.map((item, i) => (
-									<tr key={i} className="transition-colors hover:bg-muted/30">
+									<tr
+										key={`${item.date}-${i}`}
+										className="transition-colors hover:bg-muted/30"
+									>
 										<td className="whitespace-nowrap px-4 py-5 font-medium text-foreground text-xs md:px-8">
 											{item.date}
 										</td>
@@ -139,7 +151,10 @@ export default function BillingSettings() {
 											{item.amount}
 										</td>
 										<td className="px-4 py-5 text-right md:px-8">
-											<button className="rounded p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
+											<button
+												className="rounded p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+												type="button"
+											>
 												<Download size={16} />
 											</button>
 										</td>

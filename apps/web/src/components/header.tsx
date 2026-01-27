@@ -145,7 +145,10 @@ export default function Header() {
 				<div className="flex items-center gap-2 sm:gap-6 md:gap-12">
 					<Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
 						<SheetTrigger asChild>
-							<button className="p-2 transition-colors hover:bg-muted md:hidden">
+							<button
+								className="p-2 transition-colors hover:bg-muted md:hidden"
+								type="button"
+							>
 								<Menu size={20} />
 							</button>
 						</SheetTrigger>
@@ -195,6 +198,7 @@ export default function Header() {
 							<button
 								onClick={toggleTheme}
 								className="rounded-full p-2 transition-colors hover:bg-muted"
+								type="button"
 							>
 								{isDark ? <Sun size={20} /> : <Moon size={20} />}
 							</button>
@@ -220,7 +224,10 @@ export default function Header() {
 						<>
 							{isEditorPage && (
 								<div className="hidden items-center gap-4 sm:flex">
-									<button className="flex items-center gap-1.5 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary">
+									<button
+										className="flex items-center gap-1.5 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary"
+										type="button"
+									>
 										<Share2 size={16} strokeWidth={1.5} />
 										<span>Export</span>
 									</button>
@@ -239,6 +246,7 @@ export default function Header() {
 							<button
 								onClick={() => setIsNotificationOpen(true)}
 								className="relative rounded-full p-2 transition-colors hover:bg-muted"
+								type="button"
 							>
 								<Bell size={20} />
 								<span className="absolute top-2 right-2 h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
@@ -247,6 +255,7 @@ export default function Header() {
 							<button
 								onClick={toggleTheme}
 								className="rounded-full p-2 transition-colors hover:bg-muted"
+								type="button"
 							>
 								{isDark ? <Sun size={20} /> : <Moon size={20} />}
 							</button>
@@ -255,7 +264,10 @@ export default function Header() {
 
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<button className="flex items-center gap-3 transition-opacity hover:opacity-80">
+									<button
+										className="flex items-center gap-3 transition-opacity hover:opacity-80"
+										type="button"
+									>
 										<div className="flex h-9 w-9 items-center justify-center overflow-hidden bg-primary shadow-sm ring-1 ring-border/50 md:h-10 md:w-10">
 											{viewer?.image ? (
 												<img

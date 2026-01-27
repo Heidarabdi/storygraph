@@ -85,7 +85,10 @@ export function AssetCard({ asset, viewMode }: AssetCardProps) {
 				<div className="absolute top-4 right-4 z-20">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<button className="flex h-8 w-8 items-center justify-center border border-border bg-card/90 shadow-sm backdrop-blur transition-colors hover:bg-card">
+							<button
+								className="flex h-8 w-8 items-center justify-center border border-border bg-card/90 shadow-sm backdrop-blur transition-colors hover:bg-card"
+								type="button"
+							>
 								<MoreVertical size={14} strokeWidth={1.5} />
 							</button>
 						</DropdownMenuTrigger>

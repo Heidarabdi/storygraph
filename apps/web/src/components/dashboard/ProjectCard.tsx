@@ -55,6 +55,7 @@ export function ProjectCard({ project, onDelete }: ProjectCardProps) {
 								size="icon"
 								className="h-8 w-8 border border-white/20 bg-black/40 text-white backdrop-blur hover:bg-black/60"
 								onClick={(e) => e.stopPropagation()}
+								type="button"
 							>
 								<MoreHorizontal size={14} />
 							</Button>

@@ -1,3 +1,4 @@
+import type { Id } from "@storygraph/backend/convex/_generated/dataModel";
 import { Eye, PanelLeftOpen, RotateCcw, Sparkles, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,24 +9,24 @@ import {
 } from "@/components/ui/tooltip";
 
 interface Asset {
-	_id: string;
+	_id: Id<"assets">;
 	name: string;
 	type: string;
 }
 
 interface Frame {
-	_id: string;
+	_id: Id<"frames">;
 	order: number;
 	prompt: string;
 	generatedImageUrl?: string;
-	assetReferences?: string[];
+	assetReferences?: Id<"assets">[];
 }
 
 interface FrameViewProps {
 	activeFrame: Frame | undefined;
 	assets: Asset[] | undefined;
 	onUpdatePrompt: (val: string) => void;
-	onDeleteFrame: (id: string) => void;
+	onDeleteFrame: (id: Id<"frames">) => void;
 	leftPanelOpen: boolean;
 	setLeftPanelOpen: (val: boolean) => void;
 }
@@ -48,6 +49,7 @@ export function FrameView({
 							<button
 								className="absolute top-0 -left-16 hidden border border-border bg-card p-2 text-muted-foreground transition-colors hover:text-primary lg:flex"
 								onClick={() => setLeftPanelOpen(true)}
+								type="button"
 							>
 								<PanelLeftOpen size={18} strokeWidth={1.5} />
 							</button>
@@ -60,7 +62,8 @@ export function FrameView({
 					<div className="flex items-center gap-2">
 						<div className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
 						<span className="font-bold text-[11px] text-primary uppercase tracking-[0.3em]">
-							Frame // {activeFrame?.order.toString().padStart(2, "0") || "00"}
+							{"Frame // "}
+							{activeFrame?.order.toString().padStart(2, "0") || "00"}
 						</span>
 					</div>
 					<div className="hidden h-px w-12 bg-border sm:block" />
@@ -90,15 +93,22 @@ export function FrameView({
 				</div>
 
 				<div className="absolute top-0 -right-4 flex flex-col gap-3 sm:-right-16">
-					<button className="flex h-10 w-10 items-center justify-center border border-border bg-card text-primary shadow-sm transition-all hover:text-accent hover:shadow-lg sm:h-12 sm:w-12">
+					<button
+						className="flex h-10 w-10 items-center justify-center border border-border bg-card text-primary shadow-sm transition-all hover:text-accent hover:shadow-lg sm:h-12 sm:w-12"
+						type="button"
+					>
 						<RotateCcw size={16} className="sm:size-[18px]" strokeWidth={1.5} />
 					</button>
-					<button className="flex h-10 w-10 items-center justify-center border border-border bg-card text-primary shadow-sm transition-all hover:text-accent hover:shadow-lg sm:h-12 sm:w-12">
+					<button
+						className="flex h-10 w-10 items-center justify-center border border-border bg-card text-primary shadow-sm transition-all hover:text-accent hover:shadow-lg sm:h-12 sm:w-12"
+						type="button"
+					>
 						<Sparkles size={16} className="sm:size-[18px]" strokeWidth={1.5} />
 					</button>
 					<button
 						onClick={() => activeFrame?._id && onDeleteFrame(activeFrame._id)}
 						className="flex h-10 w-10 items-center justify-center border border-border bg-card text-primary shadow-sm transition-all hover:text-red-500 hover:shadow-lg sm:h-12 sm:w-12"
+						type="button"
 					>
 						<X size={16} className="sm:size-[18px]" strokeWidth={1.5} />
 					</button>
@@ -111,7 +121,7 @@ export function FrameView({
 					<div className="group space-y-4">
 						<label className="flex items-center gap-3 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.4em] transition-colors group-focus-within:text-primary">
 							<Zap size={14} className="text-accent" />
-							Frame Intent // Synthesis instructions
+							{"Frame Intent // Synthesis instructions"}
 						</label>
 						<textarea
 							className="h-32 w-full resize-none border-border border-b-2 bg-transparent py-4 font-serif text-foreground text-xl italic leading-relaxed outline-none transition-all placeholder:text-muted-foreground/20 focus:border-primary md:text-2xl"
@@ -123,7 +133,7 @@ export function FrameView({
 					<div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
 						<div className="group space-y-3">
 							<label className="font-bold text-[9px] text-muted-foreground uppercase tracking-widest transition-colors group-focus-within:text-primary">
-								Vocal Beat // Dialogue
+								{"Vocal Beat // Dialogue"}
 							</label>
 							<Input
 								className="rounded-none border-0 border-border border-b bg-transparent px-0 py-4 font-serif text-base text-foreground/80 italic shadow-none focus-visible:border-primary focus-visible:ring-0 md:text-lg"
@@ -132,7 +142,7 @@ export function FrameView({
 						</div>
 						<div className="group space-y-3">
 							<label className="font-bold text-[9px] text-muted-foreground uppercase tracking-widest transition-colors group-focus-within:text-primary">
-								Technical Spec // Camera
+								{"Technical Spec // Camera"}
 							</label>
 							<Input
 								className="rounded-none border-0 border-border border-b bg-transparent px-0 py-4 font-bold text-[9px] text-accent uppercase tracking-[0.2em] shadow-none focus-visible:border-primary focus-visible:ring-0 md:text-[10px]"

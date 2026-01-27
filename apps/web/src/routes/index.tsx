@@ -245,7 +245,7 @@ function LandingPage() {
 									<div className="absolute top-8 left-8 flex items-center gap-2">
 										<div className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
 										<span className="font-bold text-[8px] text-white/40 uppercase tracking-widest">
-											Scene 04 // Action 12
+											{"Scene 04 // Action 12"}
 										</span>
 									</div>
 									<img
@@ -308,10 +308,10 @@ function LandingPage() {
 								name: "Global Delivery",
 								desc: "Distributed rendering via Fal.ai for zero-delay production.",
 							},
-						].map((item, idx) => {
+						].map((item, _idx) => {
 							const Icon = item.icon;
 							return (
-								<div key={idx} className="space-y-6">
+								<div key={item.name} className="space-y-6">
 									<Icon size={24} className="text-accent" strokeWidth={1.5} />
 									<h4 className="font-serif text-xl italic">{item.name}</h4>
 									<p className="font-light text-muted-foreground text-xs leading-relaxed">
@@ -345,7 +345,7 @@ function LandingPage() {
 						</Button>
 					</Link>
 					<p className="mt-12 font-bold text-[8px] text-muted-foreground/60 uppercase italic tracking-widest sm:text-[10px] sm:tracking-[0.4em]">
-						Professional storytelling infrastructure // EST 2026
+						{"Professional storytelling infrastructure // EST 2026"}
 					</p>
 				</div>
 			</section>
@@ -438,16 +438,25 @@ function LandingPage() {
 
 					<div className="flex flex-col items-center justify-between gap-6 border-border/50 border-t pt-12 md:flex-row">
 						<p className="font-bold text-[9px] text-muted-foreground uppercase tracking-widest">
-							© 2026 Storygraph Architecture // London, UK
+							{"© 2026 Storygraph Architecture // London, UK"}
 						</p>
 						<div className="flex gap-8">
-							<button className="font-bold text-[9px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary">
+							<button
+								className="font-bold text-[9px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary"
+								type="button"
+							>
 								Privacy Privacy
 							</button>
-							<button className="font-bold text-[9px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary">
+							<button
+								className="font-bold text-[9px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary"
+								type="button"
+							>
 								Terms of Service
 							</button>
-							<button className="font-bold text-[9px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary">
+							<button
+								className="font-bold text-[9px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary"
+								type="button"
+							>
 								Security protocol
 							</button>
 						</div>

@@ -140,24 +140,27 @@ function PricingPage() {
 						<button
 							onClick={() => setBillingPeriod("monthly")}
 							className={`font-bold text-[9px] uppercase tracking-wider transition-colors sm:text-[10px] sm:tracking-[0.2em] ${billingPeriod === "monthly" ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+							type="button"
 						>
 							Monthly
 						</button>
-						<div
+						<button
 							className="relative h-6 w-12 cursor-pointer border border-border bg-muted transition-colors hover:border-primary/30"
 							onClick={() =>
 								setBillingPeriod(
 									billingPeriod === "monthly" ? "annually" : "monthly",
 								)
 							}
+							type="button"
 						>
 							<div
 								className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 bg-primary transition-all duration-300 ${billingPeriod === "monthly" ? "left-1" : "left-7"}`}
 							/>
-						</div>
+						</button>
 						<button
 							onClick={() => setBillingPeriod("annually")}
 							className={`flex items-center gap-1 font-bold text-[9px] uppercase tracking-wider transition-colors sm:gap-2 sm:text-[10px] sm:tracking-[0.2em] ${billingPeriod === "annually" ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+							type="button"
 						>
 							Annually
 							<span className="whitespace-nowrap bg-accent/20 px-1.5 py-0.5 text-[8px] text-accent">
@@ -289,9 +292,9 @@ function PricingPage() {
 									</tr>
 								</thead>
 								<tbody>
-									{comparison.map((row, idx) => (
+									{comparison.map((row) => (
 										<tr
-											key={idx}
+											key={row.feature}
 											className="border-border border-b transition-colors last:border-0 hover:bg-muted/30"
 										>
 											<td className="flex items-center gap-2 p-4 md:p-8">

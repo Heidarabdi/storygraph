@@ -38,7 +38,7 @@ export function Timeline({
 				</div>
 
 				{frames?.map((frame) => (
-					<div
+					<button
 						key={frame._id}
 						onClick={() => onFrameSelect(frame._id)}
 						className={`group/f relative aspect-[2.39/1] h-full shrink-0 cursor-pointer overflow-hidden border transition-all duration-500 ${
@@ -46,6 +46,7 @@ export function Timeline({
 								? "border-accent p-0.5 ring-2 ring-accent/5 md:ring-4"
 								: "border-border opacity-50 grayscale hover:opacity-100 hover:grayscale-0"
 						}`}
+						type="button"
 					>
 						<div className="relative h-full w-full overflow-hidden bg-muted/20">
 							<img
@@ -67,12 +68,13 @@ export function Timeline({
 						>
 							{frame.order.toString().padStart(2, "0")}
 						</div>
-					</div>
+					</button>
 				))}
 
 				<button
 					onClick={onAddFrame}
 					className="flex aspect-[2.39/1] h-full shrink-0 flex-col items-center justify-center gap-2 border border-border border-dashed text-muted-foreground transition-all hover:bg-muted/50 hover:text-primary"
+					type="button"
 				>
 					<Plus size={18} className="md:size-5" />
 					<span className="truncate px-2 font-bold text-[8px] uppercase italic leading-none tracking-widest md:text-[9px]">

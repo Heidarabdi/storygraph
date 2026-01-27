@@ -1,3 +1,4 @@
+import type { Id } from "@storygraph/backend/convex/_generated/dataModel";
 import { PanelLeftClose, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Asset {
-	_id: string;
+	_id: Id<"assets">;
 	name: string;
 	type: string;
 	referenceImages?: string[];
@@ -96,7 +97,10 @@ export function AssetLibrarySidebar({
 										</div>
 									</div>
 								))}
-								<button className="flex aspect-square flex-col items-center justify-center gap-2 border border-border border-dashed text-muted-foreground transition-all hover:bg-muted/50 hover:text-primary">
+								<button
+									className="flex aspect-square flex-col items-center justify-center gap-2 border border-border border-dashed text-muted-foreground transition-all hover:bg-muted/50 hover:text-primary"
+									type="button"
+								>
 									<Plus size={20} />
 									<span className="font-bold text-[9px] uppercase tracking-widest">
 										New Actor

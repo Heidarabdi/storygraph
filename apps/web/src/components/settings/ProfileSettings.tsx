@@ -26,7 +26,10 @@ export default function ProfileSettings() {
 								src="https://api.dicebear.com/7.x/avataaars/svg?seed=Julian"
 							/>
 						</div>
-						<button className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+						<button
+							className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+							type="button"
+						>
 							<Camera size={20} className="text-white" />
 						</button>
 					</div>
@@ -35,10 +38,16 @@ export default function ProfileSettings() {
 							Avatar Image
 						</h3>
 						<div className="flex flex-col gap-3 sm:flex-row">
-							<button className="w-full bg-primary px-6 py-2.5 font-bold text-[10px] text-primary-foreground uppercase tracking-widest transition-all hover:bg-neutral-800 sm:w-auto">
+							<button
+								className="w-full bg-primary px-6 py-2.5 font-bold text-[10px] text-primary-foreground uppercase tracking-widest transition-all hover:bg-neutral-800 sm:w-auto"
+								type="button"
+							>
 								Upload New
 							</button>
-							<button className="w-full border border-border px-6 py-2.5 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-all hover:bg-muted sm:w-auto">
+							<button
+								className="w-full border border-border px-6 py-2.5 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-all hover:bg-muted sm:w-auto"
+								type="button"
+							>
 								Remove
 							</button>
 						</div>
@@ -75,6 +84,7 @@ export default function ProfileSettings() {
 							</select>
 							<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
 								<svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+									<title>Toggle Role Dropdown</title>
 									<path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
 								</svg>
 							</div>
@@ -121,10 +131,16 @@ export default function ProfileSettings() {
 
 				{/* Actions */}
 				<div className="flex items-center justify-end gap-4 pt-10">
-					<button className="px-8 py-3 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary">
+					<button
+						className="px-8 py-3 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-primary"
+						type="button"
+					>
 						Discard Changes
 					</button>
-					<button className="bg-primary px-10 py-3 font-bold text-[10px] text-primary-foreground uppercase tracking-widest transition-all hover:shadow-xl">
+					<button
+						className="bg-primary px-10 py-3 font-bold text-[10px] text-primary-foreground uppercase tracking-widest transition-all hover:shadow-xl"
+						type="button"
+					>
 						Save Profile
 					</button>
 				</div>

@@ -1,4 +1,5 @@
 import { api } from "@storygraph/backend/convex/_generated/api";
+import type { Id } from "@storygraph/backend/convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import {
@@ -6,7 +7,6 @@ import {
 	ChevronRight,
 	Clock,
 	Download,
-	Folder,
 	History as HistoryIcon,
 	LayoutGrid,
 	Plus,
@@ -15,7 +15,6 @@ import {
 import { useState } from "react";
 import { NewProjectModal } from "@/components/dashboard/NewProjectModal";
 import { ProjectCard } from "@/components/dashboard/ProjectCard";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -27,7 +26,6 @@ function DashboardPage() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
 	const [activeNav, setActiveNav] = useState("all");
-	const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
 	const [isLoadingState, setIsLoadingState] = useState(false);
 
 	const navItems = [
@@ -35,12 +33,6 @@ function DashboardPage() {
 		{ id: "recent", label: "Recent", icon: Clock },
 		{ id: "shared", label: "Shared", icon: Star },
 		{ id: "archived", label: "Archived", icon: Archive },
-	];
-
-	const mockFolders = [
-		{ id: "1", name: "Feature Films", count: 12 },
-		{ id: "2", name: "Commercials", count: 5 },
-		{ id: "3", name: "Web Series", count: 8 },
 	];
 
 	const organizations = useQuery(api.organizations.list);
@@ -58,22 +50,45 @@ function DashboardPage() {
 		setHasAutoSelected(true);
 	}
 
-	// Get projects for current org or just recent projects
-	const projects = useQuery(api.projects.getRecent, {
-		orgId: (selectedOrgId ?? undefined) as any,
-	});
+	// Get projects for current org
+	const projects = useQuery(
+		api.projects.list,
+		selectedOrgId ? { orgId: selectedOrgId as Id<"organizations"> } : "skip",
+	);
 
 	const isLoading = !projects || isLoadingState;
 
-	const filteredProjects =
-		projects?.filter((p) =>
-			p.name.toLowerCase().includes(searchQuery.toLowerCase()),
-		) || [];
+	const getFilteredProjects = () => {
+		if (!projects) return [];
+
+		let result = [...projects];
+
+		if (activeNav === "recent") {
+			// Limit to 5 for "Recent" if we have more
+			result = result.slice(0, 5);
+		} else if (activeNav === "shared") {
+			// Placeholder: we don't have sharing logic yet
+			return [];
+		} else if (activeNav === "archived") {
+			// Placeholder: we don't have archival logic yet
+			return [];
+		}
+
+		if (searchQuery) {
+			result = result.filter((p) =>
+				p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+			);
+		}
+
+		return result;
+	};
+
+	const filteredProjects = getFilteredProjects();
 
 	const handleDeleteProject = async (id: string) => {
 		if (confirm("Are you sure you want to purge this project DNA?")) {
 			try {
-				await deleteProject({ projectId: id as any });
+				await deleteProject({ projectId: id as Id<"projects"> });
 			} catch (error) {
 				console.error("Failed to delete project:", error);
 			}
@@ -92,15 +107,15 @@ function DashboardPage() {
 								key={item.id}
 								onClick={() => {
 									setActiveNav(item.id);
-									setSelectedFolder(null);
 									setIsLoadingState(true);
 									setTimeout(() => setIsLoadingState(false), 500);
 								}}
 								className={`flex w-full items-center gap-3 px-4 py-3 font-bold text-[10px] uppercase tracking-[0.2em] transition-all ${
-									activeNav === item.id && !selectedFolder
+									activeNav === item.id
 										? "bg-primary text-primary-foreground shadow-xl"
 										: "text-muted-foreground hover:bg-muted hover:text-primary"
 								}`}
+								type="button"
 							>
 								<Icon size={16} strokeWidth={1.5} />
 								<span>{item.label}</span>
@@ -111,43 +126,31 @@ function DashboardPage() {
 
 				<div className="border-border/50 border-t px-8 pt-4">
 					<div className="mb-4 font-bold text-[9px] text-muted-foreground/60 uppercase tracking-[0.3em]">
-						Recent Folders
+						Recent Projects
 					</div>
 					<div className="space-y-1">
-						{mockFolders.map((folder) => (
+						{projects?.slice(0, 3).map((project) => (
 							<button
-								key={folder.id}
+								key={project._id}
 								onClick={() => {
-									setSelectedFolder(folder.name);
-									setActiveNav("folder");
-									setIsLoadingState(true);
-									setTimeout(() => setIsLoadingState(false), 500);
+									// Navigate to project or just show it?
+									// For now let's just make it a link-like button
+									setActiveNav("all");
+									setSearchQuery(project.name);
 								}}
-								className={`group flex w-full items-center justify-between gap-3 px-4 py-3 font-bold text-[10px] uppercase tracking-[0.2em] transition-all ${
-									selectedFolder === folder.name
-										? "bg-primary text-primary-foreground shadow-xl"
-										: "text-muted-foreground hover:bg-muted hover:text-primary"
-								}`}
+								className="group flex w-full items-center gap-3 px-4 py-3 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.2em] transition-all hover:bg-muted hover:text-primary"
+								type="button"
 							>
-								<span className="flex items-center gap-3">
-									<Folder size={14} strokeWidth={1.5} />
-									{folder.name}
-								</span>
-								<span
-									className={`font-mono text-[8px] italic opacity-60 ${selectedFolder === folder.name ? "text-white/60" : ""}`}
-								>
-									({folder.count})
-								</span>
+								<div className="h-1 w-1 bg-accent/40 group-hover:bg-accent" />
+								<span className="truncate">{project.name}</span>
 							</button>
 						))}
+						{(!projects || projects.length === 0) && !isLoading && (
+							<p className="px-4 py-2 font-serif text-[10px] text-muted-foreground/40 italic">
+								No recent journeys...
+							</p>
+						)}
 					</div>
-				</div>
-
-				<div className="mt-auto p-8">
-					<Button className="h-12 w-full rounded-none font-bold text-[10px] uppercase tracking-widest shadow-none">
-						<Plus size={16} className="mr-2" />
-						New Folder
-					</Button>
 				</div>
 			</aside>
 
@@ -156,15 +159,21 @@ function DashboardPage() {
 				{/* Sub-Header / Org Switcher */}
 				<div className="z-10 flex h-14 shrink-0 items-center border-border border-b bg-card/40 px-6 backdrop-blur-md">
 					<div className="flex items-center gap-2 md:gap-4">
-						<button className="p-1 text-muted-foreground transition-colors hover:text-primary">
+						<button
+							className="p-1 text-muted-foreground transition-colors hover:text-primary"
+							type="button"
+						>
 							<HistoryIcon size={16} strokeWidth={1.5} />
 						</button>
-						<button className="p-1 text-muted-foreground transition-colors hover:text-primary">
+						<button
+							className="p-1 text-muted-foreground transition-colors hover:text-primary"
+							type="button"
+						>
 							<Download size={16} strokeWidth={1.5} />
 						</button>
 						<div className="ml-2 flex lg:hidden">
 							<span className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-								Active Organization //
+								{"Active Organization //"}
 							</span>
 						</div>
 						<div className="flex items-center gap-2">
@@ -194,13 +203,13 @@ function DashboardPage() {
 						<div className="mb-12 flex flex-col items-baseline justify-between gap-6 border-border border-b pb-10 md:flex-row">
 							<div className="space-y-1">
 								<h2 className="font-bold text-[10px] text-accent uppercase tracking-[0.4em]">
-									{selectedFolder ? `${selectedFolder} //` : "Project Vault //"}
+									{"Project Vault //"}
 								</h2>
 								<h1 className="font-serif text-4xl text-primary italic">
 									{activeNav === "all"
 										? "Personal Journeys"
-										: navItems.find((n) => n.id === activeNav)?.label ||
-											selectedFolder}
+										: (navItems.find((n) => n.id === activeNav)?.label ??
+											"Projects")}
 								</h1>
 							</div>
 
@@ -222,6 +231,7 @@ function DashboardPage() {
 							<button
 								onClick={() => setIsNewProjectModalOpen(true)}
 								className="group flex h-[420px] flex-col items-center justify-center border-2 border-border border-dashed bg-card/50 transition-all hover:border-accent hover:bg-card/80"
+								type="button"
 							>
 								<div className="mb-6 flex h-20 w-20 items-center justify-center border border-border bg-muted transition-colors group-hover:bg-card">
 									<Plus size={32} className="text-primary" strokeWidth={1.5} />
@@ -236,14 +246,14 @@ function DashboardPage() {
 
 							{isLoading ? (
 								<>
-									<ProjectCardSkeleton />
-									<ProjectCardSkeleton />
+									<ProjectCardSkeleton key="skeleton-1" />
+									<ProjectCardSkeleton key="skeleton-2" />
 								</>
 							) : (
 								filteredProjects.map((project) => (
 									<ProjectCard
 										key={project._id}
-										project={project as any}
+										project={project}
 										onDelete={handleDeleteProject}
 									/>
 								))

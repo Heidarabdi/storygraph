@@ -1,4 +1,5 @@
 import { api } from "@storygraph/backend/convex/_generated/api";
+import type { Id } from "@storygraph/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,7 @@ export function NewProjectModal({
 		try {
 			await createProject({
 				name,
-				orgId: orgId as any,
+				orgId: orgId as Id<"organizations">,
 			});
 			onClose();
 			setName("");
@@ -65,7 +66,7 @@ export function NewProjectModal({
 								htmlFor="name"
 								className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-[0.4em]"
 							>
-								Project Identifier //
+								{"Project Identifier //"}
 							</Label>
 							<Input
 								id="name"

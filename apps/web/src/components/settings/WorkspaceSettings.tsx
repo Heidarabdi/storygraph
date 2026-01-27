@@ -42,7 +42,10 @@ export default function WorkspaceSettings() {
 									<Briefcase size={24} className="text-foreground opacity-20" />
 								</div>
 								<div className="flex w-full flex-col items-center space-y-3 sm:items-start">
-									<button className="w-full bg-primary px-6 py-2.5 font-bold text-[10px] text-primary-foreground uppercase tracking-widest shadow-md transition-all hover:bg-neutral-700 sm:w-auto">
+									<button
+										className="w-full bg-primary px-6 py-2.5 font-bold text-[10px] text-primary-foreground uppercase tracking-widest shadow-md transition-all hover:bg-neutral-700 sm:w-auto"
+										type="button"
+									>
 										Upload New Logo
 									</button>
 									<p className="text-center text-[9px] text-muted-foreground uppercase italic tracking-widest sm:text-left">
@@ -68,6 +71,7 @@ export default function WorkspaceSettings() {
 								</select>
 								<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
 									<svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+										<title>Dropdown Arrow</title>
 										<path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
 									</svg>
 								</div>
@@ -108,7 +112,10 @@ export default function WorkspaceSettings() {
 
 				{/* Actions */}
 				<div className="flex justify-end border-border border-t pt-8">
-					<button className="bg-primary px-8 py-3 font-bold text-[11px] text-primary-foreground uppercase tracking-[0.2em] shadow-xl transition-all hover:bg-neutral-800">
+					<button
+						className="bg-primary px-8 py-3 font-bold text-[11px] text-primary-foreground uppercase tracking-[0.2em] shadow-xl transition-all hover:bg-neutral-800"
+						type="button"
+					>
 						Save Workspace Changes
 					</button>
 				</div>
@@ -128,6 +135,7 @@ function ToggleSwitch({
 		<button
 			onClick={() => onChange(!checked)}
 			className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full transition-colors ${checked ? "bg-primary" : "bg-muted"}`}
+			type="button"
 		>
 			<span
 				className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`}

@@ -77,6 +77,9 @@ export default function NotificationPanel({
 				<div
 					className="fixed inset-0 z-55 bg-background/40 backdrop-blur-sm"
 					onClick={onClose}
+					onKeyDown={(e) => e.key === "Enter" && onClose()}
+					tabIndex={-1}
+					aria-hidden="true"
 				/>
 			)}
 
@@ -99,6 +102,7 @@ export default function NotificationPanel({
 					<button
 						onClick={onClose}
 						className="rounded-none p-2 transition-colors hover:bg-muted"
+						type="button"
 					>
 						<X size={18} />
 					</button>
@@ -158,7 +162,10 @@ export default function NotificationPanel({
 
 				{/* Footer */}
 				<div className="border-border border-t bg-card/30 p-6">
-					<button className="w-full border border-primary bg-transparent py-3 font-bold text-[10px] text-primary uppercase tracking-[0.2em] transition-all hover:bg-primary hover:text-primary-foreground">
+					<button
+						className="w-full border border-primary bg-transparent py-3 font-bold text-[10px] text-primary uppercase tracking-[0.2em] transition-all hover:bg-primary hover:text-primary-foreground"
+						type="button"
+					>
 						Mark all as read
 					</button>
 				</div>

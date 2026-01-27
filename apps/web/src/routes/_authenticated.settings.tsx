@@ -57,6 +57,7 @@ function SettingsPage() {
 											? "z-10 border-primary bg-card font-bold text-primary dark:bg-neutral-800"
 											: "border-border/50 text-muted-foreground hover:bg-muted hover:text-primary lg:border-transparent dark:hover:bg-neutral-800/50"
 									}`}
+									type="button"
 								>
 									<Icon
 										size={14}

@@ -17,7 +17,7 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({
-	id,
+	id: _id,
 	name,
 	thumbnail,
 	description,
@@ -25,8 +25,8 @@ export function ProjectCard({
 }: ProjectCardProps) {
 	return (
 		<Link
-			to="/editor"
-			// params={{ projectId: id }} // TODO: Enable when route param is ready
+			to="/editor/$projectId"
+			params={{ projectId: _id }}
 			className="group flex flex-col border border-border bg-card transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl"
 		>
 			{/* Thumbnail */}
@@ -55,6 +55,7 @@ export function ProjectCard({
 							<button
 								className="opacity-40 transition-opacity hover:opacity-100"
 								onClick={(e) => e.preventDefault()}
+								type="button"
 							>
 								<MoreHorizontal size={18} strokeWidth={1.5} />
 							</button>

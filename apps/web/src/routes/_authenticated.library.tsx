@@ -103,6 +103,7 @@ function AssetLibraryPage() {
 												key={tab}
 												onClick={() => setConsistencyTab(tab)}
 												className={`pb-4 font-bold text-[10px] uppercase tracking-widest transition-colors ${consistencyTab === tab ? "-mb-px border-primary border-b-2 text-primary" : "text-muted-foreground hover:text-primary"}`}
+												type="button"
 											>
 												{tab}
 											</button>
@@ -119,7 +120,10 @@ function AssetLibraryPage() {
 											Maintain continuity across all scenes.
 										</p>
 									</div>
-									<Button className="h-12 rounded-none px-8 font-bold text-[10px] uppercase tracking-widest shadow-none">
+									<Button
+										className="h-12 rounded-none px-8 font-bold text-[10px] uppercase tracking-widest shadow-none"
+										type="button"
+									>
 										<Plus size={16} className="mr-2" />
 										New Identity
 									</Button>
@@ -128,6 +132,7 @@ function AssetLibraryPage() {
 								{isLoading ? (
 									<div className="grid grid-cols-2 gap-8 md:grid-cols-4">
 										{Array.from({ length: 4 }).map((_, i) => (
+											// biome-ignore lint/suspicious/noArrayIndexKey: skeleton items
 											<Skeleton key={i} className="aspect-3/4 bg-muted" />
 										))}
 									</div>
@@ -139,7 +144,12 @@ function AssetLibraryPage() {
 											.map((identity) => (
 												<IdentityCard
 													key={identity._id}
-													identity={{ ...identity, traits: [] } as any}
+													identity={{
+														_id: identity._id as string,
+														name: identity.name,
+														type: identity.type,
+														traits: [],
+													}}
 												/>
 											))}
 									</div>
@@ -150,14 +160,17 @@ function AssetLibraryPage() {
 								<div className="mb-12 flex flex-col items-baseline justify-between gap-4 border-border border-b pb-8 md:flex-row">
 									<div className="space-y-1">
 										<h2 className="font-bold text-[10px] text-accent uppercase tracking-[0.4em]">
-											Vault View //
+											{"Vault View //"}
 										</h2>
 										<h1 className="font-serif text-4xl text-primary italic">
 											{selectedCategory} Collective
 										</h1>
 									</div>
 									<div className="flex items-center gap-6">
-										<button className="flex items-center gap-2 font-bold text-[10px] text-muted-foreground uppercase italic tracking-[0.2em] transition-all hover:text-primary">
+										<button
+											className="flex items-center gap-2 font-bold text-[10px] text-muted-foreground uppercase italic tracking-[0.2em] transition-all hover:text-primary"
+											type="button"
+										>
 											<Download size={14} /> Export Manifest
 										</button>
 									</div>
@@ -166,6 +179,7 @@ function AssetLibraryPage() {
 								{isLoading ? (
 									<div className="grid grid-cols-2 gap-10 md:grid-cols-3 lg:grid-cols-4">
 										{Array.from({ length: 8 }).map((_, i) => (
+											// biome-ignore lint/suspicious/noArrayIndexKey: skeleton items
 											<Skeleton key={i} className="aspect-square bg-muted" />
 										))}
 									</div>
@@ -180,7 +194,12 @@ function AssetLibraryPage() {
 										{assets.map((asset) => (
 											<AssetCard
 												key={asset._id}
-												asset={asset as any}
+												asset={{
+													_id: asset._id as string,
+													name: asset.name,
+													type: asset.type,
+													image: asset.referenceImages?.[0],
+												}}
 												viewMode={viewMode}
 											/>
 										))}

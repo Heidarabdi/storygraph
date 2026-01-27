@@ -92,6 +92,7 @@ function VerifyEmailPage() {
 								onClick={handleResendEmail}
 								disabled={isResending || resendCooldown > 0}
 								className="inline-flex items-center gap-1.5 text-primary transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+								type="button"
 							>
 								{isResending ? (
 									<>

@@ -46,11 +46,17 @@ function AuthLayout() {
 				<div className="mt-12 text-center">
 					<p className="font-bold text-[9px] text-muted-foreground uppercase italic tracking-widest">
 						By continuing, you agree to the Storygraph{" "}
-						<button className="text-primary underline-offset-4 transition-colors hover:text-accent hover:underline">
+						<button
+							className="text-primary underline-offset-4 transition-colors hover:text-accent hover:underline"
+							type="button"
+						>
 							Terms of Service
 						</button>{" "}
 						and{" "}
-						<button className="text-primary underline-offset-4 transition-colors hover:text-accent hover:underline">
+						<button
+							className="text-primary underline-offset-4 transition-colors hover:text-accent hover:underline"
+							type="button"
+						>
 							Privacy Policy
 						</button>
 						.

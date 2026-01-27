@@ -30,6 +30,7 @@ export function LibrarySidebar({
 					<button
 						onClick={() => setLibraryMode("assets")}
 						className={`flex flex-1 items-center justify-center gap-2 px-3 py-2 font-bold text-[9px] uppercase tracking-widest transition-all ${libraryMode === "assets" ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-primary"}`}
+						type="button"
 					>
 						<Grid size={14} />
 						<span>Assets</span>
@@ -37,6 +38,7 @@ export function LibrarySidebar({
 					<button
 						onClick={() => setLibraryMode("consistency")}
 						className={`flex flex-1 items-center justify-center gap-2 px-4 py-3 font-bold text-[10px] uppercase tracking-widest transition-all ${libraryMode === "consistency" ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-primary"}`}
+						type="button"
 					>
 						<Layers size={14} />
 						<span>Consistency</span>
@@ -58,6 +60,7 @@ export function LibrarySidebar({
 									? "bg-primary text-primary-foreground shadow-xl"
 									: "text-muted-foreground hover:bg-muted hover:text-primary"
 							}`}
+							type="button"
 						>
 							<span className="flex items-center gap-3">
 								<div

@@ -53,8 +53,8 @@ export default function NotificationSettings() {
 					<h3 className="border-border border-b pb-4 font-bold text-[11px] text-accent uppercase tracking-[0.3em]">
 						Email Notifications
 					</h3>
-					{emailNotifications.map((item, i) => (
-						<NotificationRow key={i} {...item} />
+					{emailNotifications.map((item) => (
+						<NotificationRow key={item.title} {...item} />
 					))}
 				</section>
 
@@ -62,14 +62,17 @@ export default function NotificationSettings() {
 					<h3 className="border-border border-b pb-4 font-bold text-[11px] text-accent uppercase tracking-[0.3em]">
 						Push Notifications
 					</h3>
-					{pushNotifications.map((item, i) => (
-						<NotificationRow key={i} {...item} />
+					{pushNotifications.map((item) => (
+						<NotificationRow key={item.title} {...item} />
 					))}
 				</section>
 
 				{/* Actions */}
 				<div className="flex justify-end border-border border-t pt-6">
-					<button className="bg-primary px-8 py-3 font-bold text-[11px] text-primary-foreground uppercase tracking-[0.2em] shadow-lg transition-all hover:shadow-xl">
+					<button
+						className="bg-primary px-8 py-3 font-bold text-[11px] text-primary-foreground uppercase tracking-[0.2em] shadow-lg transition-all hover:shadow-xl"
+						type="button"
+					>
 						Save Preferences
 					</button>
 				</div>
@@ -110,6 +113,7 @@ function ToggleSwitch({
 		<button
 			onClick={() => onChange(!checked)}
 			className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full transition-colors ${checked ? "bg-primary" : "bg-muted"}`}
+			type="button"
 		>
 			<span
 				className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`}

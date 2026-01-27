@@ -34,7 +34,7 @@ function SignupPage() {
 				name: `${firstName} ${surname}`,
 			});
 			await router.navigate({ to: "/dashboard" });
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Could not create membership. Please try again.");
 			setLoading(false);
 		}

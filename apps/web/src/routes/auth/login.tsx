@@ -26,7 +26,7 @@ function LoginPage() {
 			await signIn("password", { email, password, flow: "signIn" });
 			await router.navigate({ to: "/dashboard" });
 			// Ideally ConvexAuth handles the token and the router context updates.
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Authentication failed. Check your credentials.");
 			setLoading(false);
 		}

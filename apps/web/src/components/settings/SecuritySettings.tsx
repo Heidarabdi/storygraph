@@ -41,6 +41,7 @@ export default function SecuritySettings() {
 								<button
 									onClick={() => setShowPassword(!showPassword)}
 									className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground outline-none transition-colors hover:text-primary"
+									type="button"
 								>
 									{showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
 								</button>
@@ -58,7 +59,10 @@ export default function SecuritySettings() {
 						</div>
 					</div>
 					<div className="mt-8 flex justify-end">
-						<button className="bg-primary px-8 py-3 font-bold text-[10px] text-primary-foreground uppercase tracking-widest shadow-lg transition-all hover:bg-neutral-800">
+						<button
+							className="bg-primary px-8 py-3 font-bold text-[10px] text-primary-foreground uppercase tracking-widest shadow-lg transition-all hover:bg-neutral-800"
+							type="button"
+						>
 							Update Password
 						</button>
 					</div>
@@ -117,7 +121,10 @@ export default function SecuritySettings() {
 									</div>
 								</div>
 							</div>
-							<button className="py-2 font-bold text-[10px] text-red-500/60 uppercase tracking-[0.2em] transition-colors hover:text-red-500 min-[350px]:py-0">
+							<button
+								className="py-2 font-bold text-[10px] text-red-500/60 uppercase tracking-[0.2em] transition-colors hover:text-red-500 min-[350px]:py-0"
+								type="button"
+							>
 								Terminate
 							</button>
 						</div>
@@ -137,7 +144,10 @@ export default function SecuritySettings() {
 									</div>
 								</div>
 							</div>
-							<button className="py-2 font-bold text-[10px] text-red-500/60 uppercase tracking-[0.2em] transition-colors hover:text-red-500 min-[350px]:py-0">
+							<button
+								className="py-2 font-bold text-[10px] text-red-500/60 uppercase tracking-[0.2em] transition-colors hover:text-red-500 min-[350px]:py-0"
+								type="button"
+							>
 								Terminate
 							</button>
 						</div>
@@ -156,7 +166,10 @@ export default function SecuritySettings() {
 									Permanently delete your account and all storyboard data.
 								</p>
 							</div>
-							<button className="w-full border border-red-500/20 bg-transparent px-6 py-2.5 font-bold text-[10px] text-red-500 uppercase tracking-widest transition-all hover:bg-red-500 hover:text-white md:w-auto">
+							<button
+								className="w-full border border-red-500/20 bg-transparent px-6 py-2.5 font-bold text-[10px] text-red-500 uppercase tracking-widest transition-all hover:bg-red-500 hover:text-white md:w-auto"
+								type="button"
+							>
 								Delete Account
 							</button>
 						</div>
@@ -178,6 +191,7 @@ function ToggleSwitch({
 		<button
 			onClick={() => onChange(!checked)}
 			className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full transition-colors ${checked ? "bg-primary" : "bg-muted"}`}
+			type="button"
 		>
 			<span
 				className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`}
