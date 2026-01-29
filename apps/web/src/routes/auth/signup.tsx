@@ -1,6 +1,6 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { Briefcase, ChevronRight, Lock, Mail, User } from "lucide-react";
+import { ChevronRight, Lock, Mail, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,10 +18,18 @@ function SignupPage() {
 	const [surname, setSurname] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [passwordError, setPasswordError] = useState("");
 	const [loading, setLoading] = useState(false);
 
 	const handleSignUp = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		// Validate password
+		if (password.length < 8) {
+			setPasswordError("Password must be at least 8 characters");
+			return;
+		}
+		setPasswordError("");
 		setLoading(true);
 		try {
 			// We pass name as metadata if needed, but standard auth might just take name if configured
@@ -114,35 +122,26 @@ function SignupPage() {
 
 					<div className="group space-y-2">
 						<label className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-colors group-focus-within:text-primary">
-							Select Persona
-						</label>
-						<div className="relative">
-							<select className="w-full appearance-none rounded-none border-0 border-border border-b bg-transparent px-8 py-3 font-bold text-[11px] text-primary uppercase tracking-widest outline-none transition-colors focus:border-primary">
-								<option className="bg-card">Visual Director</option>
-								<option className="bg-card">Storyboard Artist</option>
-								<option className="bg-card">Creative Executive</option>
-								<option className="bg-card">Independent Creator</option>
-							</select>
-							<Briefcase
-								size={14}
-								className="absolute top-1/2 left-0 -translate-y-1/2 text-muted-foreground"
-							/>
-						</div>
-					</div>
-
-					<div className="group space-y-2">
-						<label className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-colors group-focus-within:text-primary">
 							Secure Cipher
 						</label>
 						<div className="relative">
 							<Input
 								type="password"
 								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								className="rounded-none border-0 border-border border-b bg-transparent px-8 py-3 text-foreground text-sm shadow-none placeholder:text-muted-foreground/30 focus-visible:border-primary focus-visible:ring-0"
+								onChange={(e) => {
+									setPassword(e.target.value);
+									if (e.target.value.length >= 8) setPasswordError("");
+								}}
+								className={`rounded-none border-0 border-b bg-transparent px-8 py-3 text-foreground text-sm shadow-none placeholder:text-muted-foreground/30 focus-visible:ring-0 ${passwordError ? "border-red-500" : "border-border focus-visible:border-primary"}`}
 								placeholder="••••••••"
 								required
+								minLength={8}
 							/>
+							{passwordError && (
+								<p className="absolute -bottom-5 left-0 text-[10px] text-red-500">
+									{passwordError}
+								</p>
+							)}
 							<Lock
 								size={14}
 								className="absolute top-1/2 left-0 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary"

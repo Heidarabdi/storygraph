@@ -1,4 +1,6 @@
+import { api } from "@storygraph/backend/convex/_generated/api";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
 import {
 	Filter,
 	Mail,
@@ -23,35 +25,18 @@ export const Route = createFileRoute("/_authenticated/team")({
 	component: TeamPage,
 });
 
-const mockTeam = [
-	{
-		id: "1",
-		name: "Julian Thorne",
-		email: "julian@storygraph.studio",
-		role: "Admin",
-		avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Julian",
-		status: "Active",
-	},
-	{
-		id: "2",
-		name: "Sarah Chen",
-		email: "sarah.c@zenith.films",
-		role: "Editor",
-		avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-		status: "Active",
-	},
-	{
-		id: "3",
-		name: "Marcus Aurelius",
-		email: "marcus@lost-islands.com",
-		role: "Viewer",
-		avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus",
-		status: "Pending",
-	},
-];
-
 function TeamPage() {
 	const [searchQuery, setSearchQuery] = useState("");
+
+	// Convex Query - get real organization members
+	const members = useQuery(api.organizations.getMembers, {});
+
+	// Filter members by search query
+	const filteredMembers = (members || []).filter(
+		(member) =>
+			member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			member.email.toLowerCase().includes(searchQuery.toLowerCase()),
+	);
 
 	return (
 		<div className="flex h-full flex-col overflow-hidden bg-background/50">
@@ -96,7 +81,7 @@ function TeamPage() {
 							</Button>
 							<div className="mx-2 h-8 w-px bg-border" />
 							<span className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-								{mockTeam.length} Members
+								{filteredMembers.length} Members
 							</span>
 						</div>
 					</div>
@@ -107,7 +92,7 @@ function TeamPage() {
 			<div className="scrollbar-thin flex-1 overflow-y-auto p-6 md:p-12">
 				<div className="mx-auto max-w-7xl">
 					<div className="grid gap-px overflow-hidden border border-border bg-border">
-						{mockTeam.map((member) => (
+						{filteredMembers.map((member) => (
 							<div
 								key={member.id}
 								className="group flex flex-col items-start justify-between gap-6 bg-card p-6 transition-colors hover:bg-muted/50 md:gap-8 md:p-8 min-[600px]:flex-row min-[600px]:items-center"
@@ -135,11 +120,6 @@ function TeamPage() {
 													{member.email}
 												</span>
 											</div>
-											{member.status === "Pending" && (
-												<span className="w-fit shrink-0 bg-accent/10 px-2 py-0.5 font-bold text-[8px] text-accent uppercase italic tracking-widest">
-													Pending Invite
-												</span>
-											)}
 										</div>
 									</div>
 								</div>
@@ -147,9 +127,9 @@ function TeamPage() {
 								<div className="flex w-full items-center justify-between gap-6 border-t pt-4 md:gap-12 min-[600px]:w-auto min-[600px]:justify-end min-[600px]:border-t-0 min-[600px]:pt-0">
 									<div className="flex items-center gap-3">
 										<div
-											className={`flex h-8 w-8 items-center justify-center border ${member.role === "Admin" ? "border-accent/40 bg-accent/5" : "border-border bg-muted"}`}
+											className={`flex h-8 w-8 items-center justify-center border ${member.role === "admin" ? "border-accent/40 bg-accent/5" : "border-border bg-muted"}`}
 										>
-											{member.role === "Admin" ? (
+											{member.role === "admin" ? (
 												<Shield size={14} className="text-accent" />
 											) : (
 												<User size={14} className="text-muted-foreground" />

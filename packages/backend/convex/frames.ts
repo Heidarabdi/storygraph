@@ -1,5 +1,5 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 export const list = query({
@@ -38,13 +38,16 @@ export const create = mutation({
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Unauthorized");
+		if (!userId)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const scene = await ctx.db.get(args.sceneId);
-		if (!scene) throw new Error("Scene not found");
+		if (!scene)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const project = await ctx.db.get(scene.projectId);
-		if (!project) throw new Error("Project not found");
+		if (!project)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -52,7 +55,8 @@ export const create = mutation({
 				q.eq("orgId", project.orgId).eq("userId", userId),
 			)
 			.first();
-		if (!membership) throw new Error("Unauthorized");
+		if (!membership)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		// Calculate order
 		const lastFrame = await ctx.db
@@ -93,16 +97,20 @@ export const update = mutation({
 	handler: async (ctx, args) => {
 		const { id, ...updates } = args;
 		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Unauthorized");
+		if (!userId)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const frame = await ctx.db.get(id);
-		if (!frame) throw new Error("Frame not found");
+		if (!frame)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const scene = await ctx.db.get(frame.sceneId);
-		if (!scene) throw new Error("Scene not found");
+		if (!scene)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const project = await ctx.db.get(scene.projectId);
-		if (!project) throw new Error("Project not found");
+		if (!project)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -110,7 +118,8 @@ export const update = mutation({
 				q.eq("orgId", project.orgId).eq("userId", userId),
 			)
 			.first();
-		if (!membership) throw new Error("Unauthorized");
+		if (!membership)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		await ctx.db.patch(id, updates);
 	},
@@ -120,16 +129,20 @@ export const remove = mutation({
 	args: { id: v.id("frames") },
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Unauthorized");
+		if (!userId)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const frame = await ctx.db.get(args.id);
-		if (!frame) throw new Error("Frame not found");
+		if (!frame)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const scene = await ctx.db.get(frame.sceneId);
-		if (!scene) throw new Error("Scene not found");
+		if (!scene)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const project = await ctx.db.get(scene.projectId);
-		if (!project) throw new Error("Project not found");
+		if (!project)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -137,7 +150,10 @@ export const remove = mutation({
 				q.eq("orgId", project.orgId).eq("userId", userId),
 			)
 			.first();
-		if (!membership) throw new Error("Unauthorized");
+		if (!membership)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		if (membership.role === "viewer")
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		await ctx.db.delete(args.id);
 	},

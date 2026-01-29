@@ -24,8 +24,8 @@ function AssetLibraryPage() {
 	const [selectedCategory, setSelectedCategory] = useState("All");
 	const [consistencyTab, setConsistencyTab] = useState("Characters");
 
-	// Convex Queries
-	const assets = useQuery(api.assets.list, "skip") || [];
+	// Convex Queries - use listAll for global library view
+	const assets = useQuery(api.assets.listAll) || [];
 	const isLoading = !assets;
 
 	const consistencyTabs = ["Characters", "Environments", "Objects", "Styles"];

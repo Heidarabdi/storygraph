@@ -97,15 +97,6 @@ function LoginPage() {
 					</div>
 				</div>
 
-				<div className="flex items-center gap-2">
-					<div className="flex h-4 w-4 cursor-pointer items-center justify-center border border-border bg-muted transition-colors hover:border-primary">
-						<div className="h-2 w-2 scale-0 bg-primary transition-transform" />
-					</div>
-					<span className="font-bold text-[10px] text-muted-foreground uppercase italic tracking-widest">
-						Maintain Session Persistence
-					</span>
-				</div>
-
 				<Button
 					type="submit"
 					disabled={loading}

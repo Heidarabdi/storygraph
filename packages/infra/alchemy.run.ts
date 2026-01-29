@@ -10,7 +10,7 @@ const app = await alchemy("storygraph");
 export const web = await TanStackStart("web", {
 	cwd: "../../apps/web",
 	bindings: {
-		VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
+		VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL as string,
 	},
 });
 

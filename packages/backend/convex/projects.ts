@@ -1,5 +1,5 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 // List projects for a specific organization
@@ -40,7 +40,8 @@ export const create = mutation({
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Unauthorized");
+		if (!userId)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -49,7 +50,8 @@ export const create = mutation({
 			)
 			.first();
 
-		if (!membership) throw new Error("Not a member of this organization");
+		if (!membership)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const projectId = await ctx.db.insert("projects", {
 			orgId: args.orgId,
@@ -82,18 +84,20 @@ export const getRecent = query({
 			return [];
 		}
 
+		const orgId = args.orgId;
+
 		// Verify access
 		const membership = await ctx.db
 			.query("organizationMembers")
 			.withIndex("by_org_user", (q) =>
-				q.eq("orgId", args.orgId!).eq("userId", userId),
+				q.eq("orgId", orgId).eq("userId", userId),
 			)
 			.first();
 		if (!membership) return [];
 
 		return await ctx.db
 			.query("projects")
-			.withIndex("by_org", (q) => q.eq("orgId", args.orgId!))
+			.withIndex("by_org", (q) => q.eq("orgId", orgId))
 			.order("desc")
 			.take(10);
 	},
@@ -128,10 +132,12 @@ export const remove = mutation({
 	args: { projectId: v.id("projects") },
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Unauthorized");
+		if (!userId)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const project = await ctx.db.get(args.projectId);
-		if (!project) throw new Error("Project not found");
+		if (!project)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -141,10 +147,36 @@ export const remove = mutation({
 			.first();
 
 		if (!membership || membership.role !== "admin") {
-			throw new Error("Only organization admins can delete projects");
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 		}
 
-		// TODO: Cascading delete for scenes, frames, and assets
+		// Cascading delete: assets, scenes, and frames
+		// 1. Delete all assets
+		const assets = await ctx.db
+			.query("assets")
+			.withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+			.collect();
+		for (const asset of assets) {
+			await ctx.db.delete(asset._id);
+		}
+
+		// 2. Delete all scenes and their frames
+		const scenes = await ctx.db
+			.query("scenes")
+			.withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+			.collect();
+		for (const scene of scenes) {
+			const frames = await ctx.db
+				.query("frames")
+				.withIndex("by_scene", (q) => q.eq("sceneId", scene._id))
+				.collect();
+			for (const frame of frames) {
+				await ctx.db.delete(frame._id);
+			}
+			await ctx.db.delete(scene._id);
+		}
+
+		// 3. Delete the project
 		await ctx.db.delete(args.projectId);
 	},
 });

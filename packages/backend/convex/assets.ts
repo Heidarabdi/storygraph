@@ -1,5 +1,5 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 export const list = query({
@@ -37,11 +37,52 @@ export const list = query({
 			assetsQuery = ctx.db
 				.query("assets")
 				.withIndex("by_project_type", (q) =>
-					q.eq("projectId", args.projectId).eq("type", args.type!),
+					q
+						.eq("projectId", args.projectId)
+						.eq(
+							"type",
+							args.type as "character" | "environment" | "prop" | "style",
+						),
 				);
 		}
 
 		return await assetsQuery.collect();
+	},
+});
+
+// List all assets across all organizations the user belongs to (for library page)
+export const listAll = query({
+	args: {},
+	handler: async (ctx) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) return [];
+
+		// Get all organizations the user is a member of
+		const memberships = await ctx.db
+			.query("organizationMembers")
+			.withIndex("by_user", (q) => q.eq("userId", userId))
+			.collect();
+
+		if (memberships.length === 0) return [];
+
+		// Get all projects from those organizations
+		const allAssets = [];
+		for (const membership of memberships) {
+			const projects = await ctx.db
+				.query("projects")
+				.withIndex("by_org", (q) => q.eq("orgId", membership.orgId))
+				.collect();
+
+			for (const project of projects) {
+				const assets = await ctx.db
+					.query("assets")
+					.withIndex("by_project", (q) => q.eq("projectId", project._id))
+					.collect();
+				allAssets.push(...assets);
+			}
+		}
+
+		return allAssets;
 	},
 });
 
@@ -61,10 +102,12 @@ export const create = mutation({
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Unauthorized");
+		if (!userId)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const project = await ctx.db.get(args.projectId);
-		if (!project) throw new Error("Project not found");
+		if (!project)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -72,7 +115,8 @@ export const create = mutation({
 				q.eq("orgId", project.orgId).eq("userId", userId),
 			)
 			.first();
-		if (!membership) throw new Error("Unauthorized");
+		if (!membership)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const assetId = await ctx.db.insert("assets", {
 			projectId: args.projectId,
@@ -91,13 +135,16 @@ export const remove = mutation({
 	args: { id: v.id("assets") },
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Unauthorized");
+		if (!userId)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const asset = await ctx.db.get(args.id);
-		if (!asset) throw new Error("Asset not found");
+		if (!asset)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const project = await ctx.db.get(asset.projectId);
-		if (!project) throw new Error("Project not found");
+		if (!project)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -105,7 +152,10 @@ export const remove = mutation({
 				q.eq("orgId", project.orgId).eq("userId", userId),
 			)
 			.first();
-		if (!membership) throw new Error("Unauthorized");
+		if (!membership)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		if (membership.role === "viewer")
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		await ctx.db.delete(args.id);
 	},

@@ -10,6 +10,8 @@
 
 import type * as assets from "../assets.js";
 import type * as auth from "../auth.js";
+import type * as emailTemplates from "../emailTemplates.js";
+import type * as emails from "../emails.js";
 import type * as frames from "../frames.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as hello from "../hello.js";
@@ -28,6 +30,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   assets: typeof assets;
   auth: typeof auth;
+  emailTemplates: typeof emailTemplates;
+  emails: typeof emails;
   frames: typeof frames;
   healthCheck: typeof healthCheck;
   hello: typeof hello;

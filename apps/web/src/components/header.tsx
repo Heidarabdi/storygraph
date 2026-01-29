@@ -36,6 +36,144 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const navLinkClass = (path: string, currentPath: string) =>
+	`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors relative h-full flex items-center ${
+		currentPath === path
+			? "text-primary"
+			: "text-muted-foreground hover:text-primary"
+	}`;
+
+const mobileNavLinkClass = (path: string, currentPath: string) =>
+	`text-[clamp(1rem,4vw,1.2rem)] font-bold uppercase tracking-[0.1em] py-6 border-b border-border w-full text-left px-8 flex items-center justify-between group transition-all ${
+		currentPath === path
+			? "text-primary bg-muted/60"
+			: "text-muted-foreground hover:text-primary hover:bg-muted/30"
+	}`;
+
+interface NavLinkProps {
+	to: string;
+	label: string;
+	mobile?: boolean;
+	currentPath: string;
+	onClose?: () => void;
+	disabled?: boolean;
+}
+
+const NavLinkItem = ({
+	to,
+	label,
+	mobile = false,
+	currentPath,
+	onClose,
+	disabled = false,
+}: NavLinkProps) => {
+	if (disabled) {
+		return (
+			<span
+				className={
+					mobile
+						? "w-full cursor-not-allowed border-border border-b px-8 py-6 font-bold text-[clamp(1rem,4vw,1.2rem)] text-muted-foreground/30 uppercase tracking-widest"
+						: "flex h-full cursor-not-allowed items-center px-2 font-bold text-[10px] text-muted-foreground/50 uppercase tracking-[0.2em]"
+				}
+			>
+				{label}
+			</span>
+		);
+	}
+
+	return (
+		<Link
+			to={to as any}
+			className={
+				mobile
+					? mobileNavLinkClass(to, currentPath)
+					: navLinkClass(to, currentPath)
+			}
+			onClick={() => {
+				if (onClose) onClose();
+			}}
+		>
+			{label}
+			{!mobile && currentPath === to && (
+				<div className="absolute right-0 bottom-0 left-0 h-0.5 bg-primary" />
+			)}
+			{mobile && (
+				<ChevronRight
+					size={18}
+					className="text-primary opacity-0 transition-opacity group-hover:opacity-100"
+				/>
+			)}
+		</Link>
+	);
+};
+
+const NavLinks = ({
+	isAuthenticated,
+	mobile = false,
+	currentPath,
+	onClose,
+}: {
+	isAuthenticated: boolean;
+	mobile?: boolean;
+	currentPath: string;
+	onClose?: () => void;
+}) => {
+	return (
+		<>
+			{!isAuthenticated ? (
+				<>
+					<NavLinkItem
+						to="/"
+						label="Story"
+						mobile={mobile}
+						currentPath={currentPath}
+						onClose={onClose}
+					/>
+					<NavLinkItem
+						to="/pricing"
+						label="Pricing"
+						mobile={mobile}
+						currentPath={currentPath}
+						onClose={onClose}
+					/>
+					<NavLinkItem
+						to="/showcase"
+						label="Showcase"
+						mobile={mobile}
+						currentPath={currentPath}
+						onClose={onClose}
+						disabled
+					/>
+				</>
+			) : (
+				<>
+					<NavLinkItem
+						to="/dashboard"
+						label="Projects"
+						mobile={mobile}
+						currentPath={currentPath}
+						onClose={onClose}
+					/>
+					<NavLinkItem
+						to="/library"
+						label="Assets"
+						mobile={mobile}
+						currentPath={currentPath}
+						onClose={onClose}
+					/>
+					<NavLinkItem
+						to="/team"
+						label="Team"
+						mobile={mobile}
+						currentPath={currentPath}
+						onClose={onClose}
+					/>
+				</>
+			)}
+		</>
+	);
+};
+
 export default function Header() {
 	const routerState = useRouterState();
 	const { isAuthenticated } = useConvexAuth();
@@ -56,93 +194,15 @@ export default function Header() {
 
 	const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
 
-	const navLinkClass = (path: string) =>
-		`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${
-			pathname === path
-				? "text-primary border-b-2 border-primary pb-4 -mb-[1px]"
-				: "text-muted-foreground hover:text-primary pb-4 -mb-[1px] border-b-2 border-transparent"
-		}`;
-
-	const mobileNavLinkClass = (path: string) =>
-		`text-[clamp(1rem,4vw,1.2rem)] font-bold uppercase tracking-[0.1em] py-6 border-b border-border w-full text-left px-8 flex items-center justify-between group transition-all ${
-			pathname === path
-				? "text-primary bg-muted/60"
-				: "text-muted-foreground hover:text-primary hover:bg-muted/30"
-		}`;
-
 	const toggleTheme = () => {
 		setTheme(isDark ? "light" : "dark");
-	};
-
-	const NavLinks = ({ mobile = false }: { mobile?: boolean }) => {
-		const LinkComponent = ({
-			to,
-			label,
-			disabled = false,
-		}: {
-			to: string;
-			label: string;
-			disabled?: boolean;
-		}) => {
-			if (disabled) {
-				return (
-					<span
-						className={
-							mobile
-								? "w-full cursor-not-allowed border-border border-b px-8 py-6 font-bold text-[clamp(1rem,4vw,1.2rem)] text-muted-foreground/30 uppercase tracking-widest"
-								: "-mb-px cursor-not-allowed pb-4 font-bold text-[10px] text-muted-foreground/50 uppercase tracking-[0.2em]"
-						}
-					>
-						{label}
-					</span>
-				);
-			}
-			return (
-				<Link
-					to={to}
-					className={mobile ? mobileNavLinkClass(to) : navLinkClass(to)}
-					onClick={() => {
-						if (mobile) {
-							// Small delay to ensure the router starts navigation before the sheet unmounts
-							setTimeout(() => setIsMobileMenuOpen(false), 100);
-						}
-					}}
-				>
-					{label}
-					{mobile && (
-						<ChevronRight
-							size={18}
-							className="text-primary opacity-0 transition-opacity group-hover:opacity-100"
-						/>
-					)}
-				</Link>
-			);
-		};
-
-		return (
-			<>
-				{!isAuthenticated ? (
-					<>
-						<LinkComponent to="/" label="Story" />
-						<LinkComponent to="/pricing" label="Pricing" />
-						<LinkComponent to="/showcase" label="Showcase" disabled />
-					</>
-				) : (
-					<>
-						<LinkComponent to="/dashboard" label="Projects" />
-						<LinkComponent to="/library" label="Assets" />
-						<LinkComponent to="/team" label="Team" />
-					</>
-				)}
-			</>
-		);
 	};
 
 	return (
 		<>
 			<header className="sticky top-0 z-50 flex h-16 items-center justify-between border-border border-b bg-background/90 px-3 backdrop-blur-md md:h-20 md:px-6">
 				{/* Left: Logo & Nav */}
-				<div className="flex items-center gap-2 sm:gap-6 md:gap-12">
+				<div className="flex h-full items-center gap-2 sm:gap-6 md:gap-12">
 					<Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
 						<SheetTrigger asChild>
 							<button
@@ -163,11 +223,16 @@ export default function Header() {
 								</SheetTitle>
 							</SheetHeader>
 							<nav className="flex flex-1 flex-col">
-								<NavLinks mobile />
+								<NavLinks
+									isAuthenticated={isAuthenticated}
+									mobile
+									currentPath={pathname}
+									onClose={() => setIsMobileMenuOpen(false)}
+								/>
 								{isAuthenticated && (
 									<Link
 										to="/settings"
-										className={mobileNavLinkClass("/settings")}
+										className={mobileNavLinkClass("/settings", pathname)}
 										onClick={() => setIsMobileMenuOpen(false)}
 									>
 										Settings
@@ -186,8 +251,11 @@ export default function Header() {
 						</span>
 					</Link>
 
-					<nav className="hidden h-20 items-center gap-8 pt-5 md:flex">
-						<NavLinks />
+					<nav className="hidden h-full items-center gap-8 md:flex">
+						<NavLinks
+							isAuthenticated={isAuthenticated}
+							currentPath={pathname}
+						/>
 					</nav>
 				</div>
 

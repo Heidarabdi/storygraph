@@ -1,5 +1,6 @@
 import type { Id } from "@storygraph/backend/convex/_generated/dataModel";
 import { Eye, PanelLeftOpen, RotateCcw, Sparkles, X, Zap } from "lucide-react";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -105,13 +106,19 @@ export function FrameView({
 					>
 						<Sparkles size={16} className="sm:size-[18px]" strokeWidth={1.5} />
 					</button>
-					<button
-						onClick={() => activeFrame?._id && onDeleteFrame(activeFrame._id)}
-						className="flex h-10 w-10 items-center justify-center border border-border bg-card text-primary shadow-sm transition-all hover:text-red-500 hover:shadow-lg sm:h-12 sm:w-12"
-						type="button"
-					>
-						<X size={16} className="sm:size-[18px]" strokeWidth={1.5} />
-					</button>
+					<ConfirmDeleteDialog
+						title="Delete Frame?"
+						description="Are you sure you want to delete this frame? This action cannot be undone."
+						onConfirm={() => activeFrame?._id && onDeleteFrame(activeFrame._id)}
+						trigger={
+							<button
+								className="flex h-10 w-10 items-center justify-center border border-border bg-card text-primary shadow-sm transition-all hover:text-red-500 hover:shadow-lg sm:h-12 sm:w-12"
+								type="button"
+							>
+								<X size={16} className="sm:size-[18px]" strokeWidth={1.5} />
+							</button>
+						}
+					/>
 				</div>
 			</div>
 

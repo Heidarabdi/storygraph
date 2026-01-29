@@ -111,7 +111,9 @@ export default defineSchema({
 		name: v.string(),
 		description: v.optional(v.string()),
 		referenceImages: v.optional(v.array(v.string())), // storage IDs
-		metadata: v.optional(v.any()), // flexible (style params, emotions, etc.)
+		metadata: v.optional(
+			v.record(v.string(), v.union(v.string(), v.number(), v.boolean())),
+		), // typed: style params, emotions, etc.
 	})
 		.index("by_project", ["projectId"])
 		.index("by_project_type", ["projectId", "type"]),
@@ -153,7 +155,9 @@ export default defineSchema({
 		userId: v.id("users"),
 		model: v.string(),
 		prompt: v.string(),
-		parameters: v.optional(v.any()),
+		parameters: v.optional(
+			v.record(v.string(), v.union(v.string(), v.number(), v.boolean())),
+		),
 		cost: v.optional(v.number()),
 		durationMs: v.optional(v.number()),
 		status: v.optional(
@@ -170,7 +174,9 @@ export default defineSchema({
 		action: v.string(),
 		resourceType: activityResourceType,
 		resourceId: v.string(),
-		metadata: v.optional(v.any()),
+		metadata: v.optional(
+			v.record(v.string(), v.union(v.string(), v.number(), v.boolean())),
+		),
 	})
 		.index("by_org", ["orgId"])
 		.index("by_user", ["userId"]),
