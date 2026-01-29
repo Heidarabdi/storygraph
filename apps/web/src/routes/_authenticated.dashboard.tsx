@@ -108,10 +108,11 @@ function DashboardPage() {
 									setIsLoadingState(true);
 									setTimeout(() => setIsLoadingState(false), 500);
 								}}
-								className={`flex w-full items-center gap-3 px-4 py-3 font-bold text-[10px] uppercase tracking-[0.2em] transition-all ${activeNav === item.id
+								className={`flex w-full items-center gap-3 px-4 py-3 font-bold text-[10px] uppercase tracking-[0.2em] transition-all ${
+									activeNav === item.id
 										? "bg-primary text-primary-foreground shadow-xl"
 										: "text-muted-foreground hover:bg-muted hover:text-primary"
-									}`}
+								}`}
 								type="button"
 							>
 								<Icon size={16} strokeWidth={1.5} />

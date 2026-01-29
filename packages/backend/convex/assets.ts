@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { validateDescription, validateName } from "./lib/validation";
 
 export const list = query({
 	args: {
@@ -117,12 +118,18 @@ export const create = mutation({
 			.first();
 		if (!membership)
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		if (membership.role === "viewer")
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		// Validate inputs
+		const validatedName = validateName(args.name, "Asset name");
+		const validatedDescription = validateDescription(args.description);
 
 		const assetId = await ctx.db.insert("assets", {
 			projectId: args.projectId,
 			type: args.type,
-			name: args.name,
-			description: args.description,
+			name: validatedName,
+			description: validatedDescription,
 			referenceImages: args.referenceImages,
 			metadata: args.metadata,
 		});

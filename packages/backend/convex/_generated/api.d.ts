@@ -16,6 +16,7 @@ import type * as frames from "../frames.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as hello from "../hello.js";
 import type * as http from "../http.js";
+import type * as lib_validation from "../lib/validation.js";
 import type * as organizations from "../organizations.js";
 import type * as projects from "../projects.js";
 import type * as scenes from "../scenes.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   healthCheck: typeof healthCheck;
   hello: typeof hello;
   http: typeof http;
+  "lib/validation": typeof lib_validation;
   organizations: typeof organizations;
   projects: typeof projects;
   scenes: typeof scenes;

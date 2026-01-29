@@ -50,7 +50,7 @@ export const sendPasswordResetEmail = action({
 		resetToken: v.string(),
 		resetUrl: v.string(),
 	},
-	handler: async (ctx, args) => {
+	handler: async (_ctx, args) => {
 		return await sendResendEmail({
 			to: args.email,
 			subject: "Reset your Storygraph password",
@@ -65,7 +65,7 @@ export const sendVerificationEmail = action({
 		email: v.string(),
 		code: v.string(),
 	},
-	handler: async (ctx, args) => {
+	handler: async (_ctx, args) => {
 		return await sendResendEmail({
 			to: args.email,
 			subject: "Verify your Storygraph email",

@@ -35,6 +35,31 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 			{
 				title: "Storygraph",
 			},
+			// Security headers as meta tags
+			{
+				"http-equiv": "X-Content-Type-Options",
+				content: "nosniff",
+			},
+			{
+				"http-equiv": "X-Frame-Options",
+				content: "DENY",
+			},
+			{
+				"http-equiv": "Content-Security-Policy",
+				content: [
+					"default-src 'self'",
+					"script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Required for Vite HMR in dev
+					"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+					"font-src 'self' https://fonts.gstatic.com",
+					"img-src 'self' data: blob: https:",
+					"connect-src 'self' https://*.convex.cloud wss://*.convex.cloud https://api.resend.com",
+					"frame-ancestors 'none'",
+				].join("; "),
+			},
+			{
+				name: "referrer",
+				content: "strict-origin-when-cross-origin",
+			},
 		],
 		links: [
 			{

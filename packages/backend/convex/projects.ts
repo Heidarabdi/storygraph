@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { validateDescription, validateName } from "./lib/validation";
 
 // List projects for a specific organization
 export const list = query({
@@ -53,10 +54,14 @@ export const create = mutation({
 		if (!membership)
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
+		// Validate inputs
+		const validatedName = validateName(args.name, "Project name");
+		const validatedDescription = validateDescription(args.description);
+
 		const projectId = await ctx.db.insert("projects", {
 			orgId: args.orgId,
-			name: args.name,
-			description: args.description,
+			name: validatedName,
+			description: validatedDescription,
 			isPublic: args.isPublic ?? false,
 			// thumbnail: TODO generate pattern
 		});

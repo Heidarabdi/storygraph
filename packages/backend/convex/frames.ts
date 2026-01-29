@@ -66,10 +66,25 @@ export const create = mutation({
 			.first();
 		const order = lastFrame ? lastFrame.order + 1 : 1;
 
+		// Validate prompt (using name validator with custom label, max 500 chars)
+		const trimmedPrompt = args.prompt.trim();
+		if (!trimmedPrompt) {
+			throw new ConvexError({
+				code: "VALIDATION_ERROR",
+				message: "Frame prompt is required",
+			});
+		}
+		if (trimmedPrompt.length > 500) {
+			throw new ConvexError({
+				code: "VALIDATION_ERROR",
+				message: "Frame prompt must be less than 500 characters",
+			});
+		}
+
 		const frameId = await ctx.db.insert("frames", {
 			sceneId: args.sceneId,
 			order,
-			prompt: args.prompt,
+			prompt: trimmedPrompt,
 			status: "pending",
 			assetReferences: args.assetReferences ?? [],
 		});
@@ -119,6 +134,8 @@ export const update = mutation({
 			)
 			.first();
 		if (!membership)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		if (membership.role === "viewer")
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		await ctx.db.patch(id, updates);

@@ -176,7 +176,7 @@ const NavLinks = ({
 
 export default function Header() {
 	const routerState = useRouterState();
-	const { isAuthenticated } = useConvexAuth();
+	const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
 	const { signOut } = useAuthActions();
 	const viewer = useQuery(api.users.viewer);
 
@@ -261,7 +261,14 @@ export default function Header() {
 
 				{/* Right: Actions */}
 				<div className="flex items-center gap-2 md:gap-4">
-					{!isAuthenticated ? (
+					{isAuthLoading ? (
+						// Loading skeleton to prevent flash
+						<div className="flex items-center gap-3 md:gap-4">
+							<Skeleton className="h-9 w-9 rounded-full" />
+							<Skeleton className="hidden h-4 w-16 sm:block" />
+							<Skeleton className="h-9 w-24 rounded-none" />
+						</div>
+					) : !isAuthenticated ? (
 						<div className="flex items-center gap-3 md:gap-4">
 							<button
 								onClick={toggleTheme}

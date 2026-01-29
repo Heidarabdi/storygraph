@@ -1,3 +1,18 @@
+// Email token expiration times in minutes (must match Convex Auth config)
+export const EMAIL_EXPIRY = {
+	PASSWORD_RESET: 60, // 1 hour
+	VERIFICATION: 15, // 15 minutes
+} as const;
+
+// Helper to format expiry time for display
+const formatExpiry = (minutes: number): string => {
+	if (minutes >= 60) {
+		const hours = Math.floor(minutes / 60);
+		return `${hours} hour${hours > 1 ? "s" : ""}`;
+	}
+	return `${minutes} minutes`;
+};
+
 export const passwordResetTemplate = (token: string) => `
 <!DOCTYPE html>
 <html>
@@ -22,7 +37,7 @@ export const passwordResetTemplate = (token: string) => `
             <p style="font-size: 12px; color: #999999; margin: 32px 0 0 0;">
                 If you didn't request this, you can safely ignore this email.
                 <br><br>
-                This code will expire in 1 hour.
+                This code will expire in ${formatExpiry(EMAIL_EXPIRY.PASSWORD_RESET)}.
             </p>
         </div>
         <p style="font-size: 11px; color: #999999; text-align: center; margin-top: 24px;">
@@ -53,7 +68,7 @@ export const emailVerificationTemplate = (token: string) => `
                 </span>
             </div>
             <p style="font-size: 12px; color: #999999; margin: 0;">
-                This code will expire in 15 minutes.
+                This code will expire in ${formatExpiry(EMAIL_EXPIRY.VERIFICATION)}.
             </p>
         </div>
         <p style="font-size: 11px; color: #999999; text-align: center; margin-top: 24px;">
