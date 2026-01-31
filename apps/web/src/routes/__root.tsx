@@ -81,6 +81,14 @@ function RootDocument() {
 		match.pathname.startsWith("/auth"),
 	);
 
+	// Check if we're on an editor route - editor has its own minimal floating UI
+	const isEditorRoute = matches.some((match) =>
+		match.pathname.includes("/editor/"),
+	);
+
+	// Full-screen layout (no header) for auth and editor routes
+	const isFullScreen = isAuthRoute || isEditorRoute;
+
 	return (
 		<ConvexAuthProvider client={convexQueryClient.convexClient}>
 			<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -89,8 +97,8 @@ function RootDocument() {
 						<HeadContent />
 					</head>
 					<body>
-						{isAuthRoute ? (
-							// Auth routes: full-screen layout without header
+						{isFullScreen ? (
+							// Full-screen layout without header
 							<div className="flex h-svh flex-col overflow-x-hidden">
 								<Outlet />
 							</div>
