@@ -2,63 +2,58 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { validateDescription, validateName } from "./lib/validation";
+import type { Id } from "./_generated/dataModel";
 
+/**
+ * ASSET LIBRARY PHILOSOPHY:
+ * Assets are first-class citizens of an Organization. 
+ * They are created in the Library (org-level) and are globally accessible
+ * across all projects within that organization.
+ */
+
+// List assets within an Organization
 export const list = query({
 	args: {
-		projectId: v.id("projects"),
-		type: v.optional(
-			v.union(
-				v.literal("character"),
-				v.literal("environment"),
-				v.literal("prop"),
-				v.literal("style"),
-			),
-		),
+		orgId: v.id("organizations"),
+		categoryId: v.optional(v.id("assetCategories")),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
 		if (!userId) return [];
 
-		const project = await ctx.db.get(args.projectId);
-		if (!project) return [];
-
 		const membership = await ctx.db
 			.query("organizationMembers")
 			.withIndex("by_org_user", (q) =>
-				q.eq("orgId", project.orgId).eq("userId", userId),
+				q.eq("orgId", args.orgId).eq("userId", userId),
 			)
 			.first();
 		if (!membership) return [];
 
-		let assetsQuery = ctx.db
+		let q = ctx.db
 			.query("assets")
-			.withIndex("by_project", (q) => q.eq("projectId", args.projectId));
+			.withIndex("by_org", (qx) => qx.eq("orgId", args.orgId));
 
-		if (args.type) {
-			assetsQuery = ctx.db
+		if (args.categoryId) {
+			q = ctx.db
 				.query("assets")
-				.withIndex("by_project_type", (q) =>
-					q
-						.eq("projectId", args.projectId)
-						.eq(
-							"type",
-							args.type as "character" | "environment" | "prop" | "style",
-						),
+				.withIndex("by_org_category", (qx) => 
+					qx.eq("orgId", args.orgId).eq("categoryId", args.categoryId!)
 				);
 		}
 
-		return await assetsQuery.collect();
+		return await q.collect();
 	},
 });
 
-// List all assets across all organizations the user belongs to (for library page)
+// Helper for the Library page to see everything they have access to across all their orgs
 export const listAll = query({
-	args: {},
-	handler: async (ctx) => {
+	args: {
+		categoryId: v.optional(v.id("assetCategories")),
+	},
+	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
 		if (!userId) return [];
 
-		// Get all organizations the user is a member of
 		const memberships = await ctx.db
 			.query("organizationMembers")
 			.withIndex("by_user", (q) => q.eq("userId", userId))
@@ -66,36 +61,52 @@ export const listAll = query({
 
 		if (memberships.length === 0) return [];
 
-		// Get all projects from those organizations
-		const allAssets = [];
+		let allAssets: any[] = [];
 		for (const membership of memberships) {
-			const projects = await ctx.db
-				.query("projects")
-				.withIndex("by_org", (q) => q.eq("orgId", membership.orgId))
-				.collect();
-
-			for (const project of projects) {
-				const assets = await ctx.db
+			let q = ctx.db
+				.query("assets")
+				.withIndex("by_org", (qx) => qx.eq("orgId", membership.orgId));
+			
+			if (args.categoryId) {
+				q = ctx.db
 					.query("assets")
-					.withIndex("by_project", (q) => q.eq("projectId", project._id))
-					.collect();
-				allAssets.push(...assets);
+					.withIndex("by_org_category", (qx) => 
+						qx.eq("orgId", membership.orgId).eq("categoryId", args.categoryId!)
+					);
 			}
+			const results = await q.collect();
+			allAssets = allAssets.concat(results);
 		}
-
 		return allAssets;
+	},
+});
+
+export const search = query({
+	args: {
+		orgId: v.id("organizations"),
+		categoryId: v.optional(v.id("assetCategories")),
+		query: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) return [];
+
+		if (args.query.trim().length === 0) return [];
+
+		let assetsQuery = ctx.db.query("assets").withSearchIndex("search_assets", (q) => {
+			let searchQ = q.search("name", args.query).eq("orgId", args.orgId);
+			if (args.categoryId) searchQ = searchQ.eq("categoryId", args.categoryId);
+			return searchQ;
+		});
+
+		return await assetsQuery.collect();
 	},
 });
 
 export const create = mutation({
 	args: {
-		projectId: v.id("projects"),
-		type: v.union(
-			v.literal("character"),
-			v.literal("environment"),
-			v.literal("prop"),
-			v.literal("style"),
-		),
+		orgId: v.id("organizations"),
+		categoryId: v.id("assetCategories"),
 		name: v.string(),
 		description: v.optional(v.string()),
 		referenceImages: v.optional(v.array(v.string())),
@@ -106,35 +117,64 @@ export const create = mutation({
 		if (!userId)
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const project = await ctx.db.get(args.projectId);
-		if (!project)
-			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
-
 		const membership = await ctx.db
 			.query("organizationMembers")
 			.withIndex("by_org_user", (q) =>
-				q.eq("orgId", project.orgId).eq("userId", userId),
+				q.eq("orgId", args.orgId).eq("userId", userId),
 			)
 			.first();
-		if (!membership)
-			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
-		if (membership.role === "viewer")
+		if (!membership || membership.role === "viewer")
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		// Validate inputs
 		const validatedName = validateName(args.name, "Asset name");
 		const validatedDescription = validateDescription(args.description);
 
-		const assetId = await ctx.db.insert("assets", {
-			projectId: args.projectId,
-			type: args.type,
+		return await ctx.db.insert("assets", {
+			orgId: args.orgId,
+			categoryId: args.categoryId,
 			name: validatedName,
 			description: validatedDescription,
 			referenceImages: args.referenceImages,
 			metadata: args.metadata,
 		});
+	},
+});
 
-		return assetId;
+export const update = mutation({
+	args: {
+		id: v.id("assets"),
+		name: v.optional(v.string()),
+		description: v.optional(v.string()),
+		categoryId: v.optional(v.id("assetCategories")),
+		referenceImages: v.optional(v.array(v.string())),
+		metadata: v.optional(v.any()),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		const asset = await ctx.db.get(args.id);
+		if (!asset)
+			throw new ConvexError({ code: "NOT_FOUND", message: "Asset not found" });
+
+		const membership = await ctx.db
+			.query("organizationMembers")
+			.withIndex("by_org_user", (q) =>
+				q.eq("orgId", asset.orgId).eq("userId", userId),
+			)
+			.first();
+		if (!membership || membership.role === "viewer")
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		const updates: any = {};
+		if (args.name !== undefined) updates.name = validateName(args.name, "Asset name");
+		if (args.description !== undefined) updates.description = validateDescription(args.description);
+		if (args.categoryId !== undefined) updates.categoryId = args.categoryId;
+		if (args.referenceImages !== undefined) updates.referenceImages = args.referenceImages;
+		if (args.metadata !== undefined) updates.metadata = args.metadata;
+
+		await ctx.db.patch(args.id, updates);
 	},
 });
 
@@ -149,19 +189,13 @@ export const remove = mutation({
 		if (!asset)
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const project = await ctx.db.get(asset.projectId);
-		if (!project)
-			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
-
 		const membership = await ctx.db
 			.query("organizationMembers")
 			.withIndex("by_org_user", (q) =>
-				q.eq("orgId", project.orgId).eq("userId", userId),
+				q.eq("orgId", asset.orgId).eq("userId", userId),
 			)
 			.first();
-		if (!membership)
-			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
-		if (membership.role === "viewer")
+		if (!membership || membership.role === "viewer")
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		await ctx.db.delete(args.id);

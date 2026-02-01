@@ -11,6 +11,8 @@ import {
   LayoutGrid,
   Plus,
   Star,
+  Grid,
+  List,
 } from "lucide-react";
 import { useState } from "react";
 import { NewProjectModal } from "@/components/dashboard/NewProjectModal";
@@ -27,6 +29,7 @@ function DashboardPage() {
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState("all");
   const [isLoadingState, setIsLoadingState] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const navItems = [
     { id: "all", label: "All Projects", icon: LayoutGrid },
@@ -64,13 +67,10 @@ function DashboardPage() {
     let result = [...projects];
 
     if (activeNav === "recent") {
-      // Limit to 5 for "Recent" if we have more
       result = result.slice(0, 5);
     } else if (activeNav === "shared") {
-      // Placeholder: we don't have sharing logic yet
       return [];
     } else if (activeNav === "archived") {
-      // Placeholder: we don't have archival logic yet
       return [];
     }
 
@@ -131,8 +131,6 @@ function DashboardPage() {
               <button
                 key={project._id}
                 onClick={() => {
-                  // Navigate to project or just show it?
-                  // For now let's just make it a link-like button
                   setActiveNav("all");
                   setSearchQuery(project.name);
                 }}
@@ -161,35 +159,19 @@ function DashboardPage() {
               className="p-1 text-muted-foreground transition-colors hover:text-primary"
               type="button"
             >
-              <HistoryIcon size={16} strokeWidth={1.5} />
+              <HistoryIcon size={18} strokeWidth={1.5} />
             </button>
             <button
               className="p-1 text-muted-foreground transition-colors hover:text-primary"
               type="button"
             >
-              <Download size={16} strokeWidth={1.5} />
+              <Download size={18} strokeWidth={1.5} />
             </button>
-            <div className="ml-2 flex lg:hidden">
-              <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-                {"Active Organization //"}
+            <div className="flex items-center gap-2 ml-2">
+              <span className="font-serif text-primary text-sm italic">
+                {organizations?.find((o) => o._id === selectedOrgId)?.name ||
+                  "Personal Workspace"}
               </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <select
-                className="cursor-pointer bg-transparent font-serif text-primary text-sm italic outline-none"
-                value={selectedOrgId || ""}
-                onChange={(e) => setSelectedOrgId(e.target.value || null)}
-              >
-                {!organizations || organizations.length === 0 ? (
-                  <option value="">Personal Workspace</option>
-                ) : null}
-                {organizations?.map((org) => (
-                  <option key={org._id} value={org._id}>
-                    {org.name}
-                  </option>
-                ))}
-              </select>
-
               <ChevronRight size={14} className="text-muted-foreground/40" />
             </div>
           </div>
@@ -203,16 +185,35 @@ function DashboardPage() {
                 <h2 className="font-bold text-[10px] text-accent uppercase tracking-[0.4em]">
                   {"Project Vault //"}
                 </h2>
-                <h1 className="font-serif text-4xl text-primary italic">
+                <h1 className="font-serif text-4xl text-primary italic lowercase">
                   {activeNav === "all"
-                    ? "Personal Journeys"
-                    : (navItems.find((n) => n.id === activeNav)?.label ??
-                      "Projects")}
+                    ? "personal journeys"
+                    : (navItems
+                        .find((n) => n.id === activeNav)
+                        ?.label.toLowerCase() ?? "projects")}
                 </h1>
               </div>
 
-              <div className="flex w-full items-center sm:w-auto">
-                <div className="relative flex-1 sm:min-w-[320px]">
+              <div className="flex w-full items-center gap-6 sm:w-auto">
+                {/* Unified View Toggle */}
+                <div className="flex items-center gap-1 bg-muted/20 p-1">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 transition-all ${viewMode === "grid" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground/40 hover:text-primary"}`}
+                    title="Grid View"
+                  >
+                    <Grid size={18} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-2 transition-all ${viewMode === "list" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground/40 hover:text-primary"}`}
+                    title="Details View"
+                  >
+                    <List size={18} />
+                  </button>
+                </div>
+
+                <div className="relative w-full sm:w-72">
                   <input
                     type="text"
                     placeholder="Search journeys..."
@@ -224,38 +225,73 @@ function DashboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 xl:grid-cols-3">
-              {/* Create New Project Card */}
-              <button
-                onClick={() => setIsNewProjectModalOpen(true)}
-                className="group flex h-[420px] flex-col items-center justify-center border-2 border-border border-dashed bg-card/50 transition-all hover:border-accent hover:bg-card/80"
-                type="button"
-              >
-                <div className="mb-6 flex h-20 w-20 items-center justify-center border border-border bg-muted transition-colors group-hover:bg-card">
-                  <Plus size={32} className="text-primary" strokeWidth={1.5} />
-                </div>
-                <span className="font-bold text-[11px] uppercase tracking-[0.3em]">
-                  New Project
-                </span>
-                <span className="mt-2 font-serif text-[10px] text-muted-foreground italic">
-                  Begin a new visual journey
-                </span>
-              </button>
-
-              {isLoading ? (
-                <>
-                  <ProjectCardSkeleton key="skeleton-1" />
-                  <ProjectCardSkeleton key="skeleton-2" />
-                </>
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 gap-8 lg:grid-cols-2 xl:grid-cols-3"
+                  : "space-y-px border-y border-border"
+              }
+            >
+              {/* Create New Project Card - Adapts to Mode */}
+              {viewMode === "grid" ? (
+                <button
+                  onClick={() => setIsNewProjectModalOpen(true)}
+                  className="group flex h-[420px] flex-col items-center justify-center border-2 border-border border-dashed bg-card/50 transition-all hover:border-accent hover:bg-card/80"
+                  type="button"
+                >
+                  <div className="mb-6 flex h-20 w-20 items-center justify-center border border-border bg-muted transition-colors group-hover:bg-card">
+                    <Plus
+                      size={32}
+                      className="text-primary"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <span className="font-bold text-[11px] uppercase tracking-[0.3em]">
+                    New Project
+                  </span>
+                  <span className="mt-2 font-serif text-[10px] text-muted-foreground italic lowercase">
+                    Begin a new visual journey
+                  </span>
+                </button>
               ) : (
-                filteredProjects.map((project) => (
-                  <ProjectCard
-                    key={project._id}
-                    project={project}
-                    onDelete={handleDeleteProject}
-                  />
-                ))
+                <button
+                  onClick={() => setIsNewProjectModalOpen(true)}
+                  className="flex w-full items-center gap-6 bg-card/50 p-6 hover:bg-muted/30 transition-all border-x border-border/50 group"
+                  type="button"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center border border-border bg-muted group-hover:bg-card transition-colors">
+                    <Plus size={20} className="text-primary" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <span className="block font-bold text-[10px] uppercase tracking-[0.2em]">
+                      New Journey Protocol
+                    </span>
+                    <span className="font-serif text-[9px] text-muted-foreground italic lowercase opacity-60">
+                      initialize new visual journey entry
+                    </span>
+                  </div>
+                </button>
               )}
+
+              {isLoading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton
+                      key={i}
+                      className={
+                        viewMode === "grid"
+                          ? "h-[420px] bg-card border border-border"
+                          : "h-24 bg-card border border-border"
+                      }
+                    />
+                  ))
+                : filteredProjects.map((project) => (
+                    <ProjectCard
+                      key={project._id}
+                      project={project}
+                      onDelete={handleDeleteProject}
+                      viewMode={viewMode}
+                    />
+                  ))}
             </div>
           </div>
         </main>
@@ -266,23 +302,6 @@ function DashboardPage() {
         onClose={() => setIsNewProjectModalOpen(false)}
         orgId={selectedOrgId}
       />
-    </div>
-  );
-}
-
-function ProjectCardSkeleton() {
-  return (
-    <div className="flex h-[420px] flex-col border border-border bg-card">
-      <Skeleton className="aspect-[2.39/1] w-full rounded-none bg-muted" />
-      <div className="flex flex-1 flex-col space-y-4 p-6">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-3/4 bg-muted" />
-          <Skeleton className="h-3 w-1/2 bg-muted" />
-        </div>
-        <div className="mt-auto border-border border-t pt-4">
-          <Skeleton className="h-4 w-full bg-muted" />
-        </div>
-      </div>
     </div>
   );
 }

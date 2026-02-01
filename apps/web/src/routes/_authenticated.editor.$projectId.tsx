@@ -435,30 +435,30 @@ function EditorPage() {
 
                     {/* Right Column: Refined Metadata Sidebar - Collapsible */}
                     <div
-                      className={`shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
+                      className={`shrink-0 transition-all duration-300 ease-in-out ${
                         showRightSidebar
                           ? "w-96 opacity-100"
                           : "w-0 opacity-0 pointer-events-none"
                       }`}
                     >
-                      <div className="h-full w-96 rounded-2xl border border-border bg-card/40 shadow-2xl backdrop-blur-md overflow-hidden flex flex-col">
+                      <div className="relative h-full w-96 rounded-2xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden">
                         {/* Sidebar Header */}
-                        <div className="px-5 py-4 border-b border-border bg-card/60 flex items-center justify-between">
+                        <div className="relative z-10 px-6 py-5 border-b border-border bg-card flex items-center justify-between">
                           <span className="text-xs font-bold tracking-tight text-foreground/80">
                             Properties
                           </span>
                           <button
                             onClick={() => setShowRightSidebar(false)}
-                            className="text-muted-foreground/30 hover:text-primary transition-colors"
+                            className="text-muted-foreground/40 hover:text-primary transition-colors p-1 rounded-md hover:bg-muted"
                           >
                             <PanelRightClose size={16} />
                           </button>
                         </div>
 
-                        <div className="p-2 space-y-2 overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-none">
                           {/* Assets Section */}
-                          <div className="p-4 space-y-4 rounded-xl bg-card/30 border border-border/50 shadow-sm transition-all hover:bg-card/50">
-                            <div className="flex items-center justify-between">
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between px-2">
                               <span className="flex items-center gap-2.5 text-xs font-semibold tracking-tight text-muted-foreground">
                                 <User size={12} className="text-accent" />
                                 Assets
@@ -494,9 +494,11 @@ function EditorPage() {
                             </div>
                           </div>
 
+                          <div className="h-px bg-border/50 mx-2" />
+
                           {/* Continuity Section */}
-                          <div className="p-4 space-y-4 rounded-xl bg-card/30 border border-border/50 shadow-sm transition-all hover:bg-card/50">
-                            <div className="flex items-center justify-between">
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between px-2">
                               <span className="flex items-center gap-2.5 text-xs font-semibold tracking-tight text-muted-foreground">
                                 <Link2 size={12} className="text-accent" />
                                 Continuity
@@ -537,9 +539,11 @@ function EditorPage() {
                             </div>
                           </div>
 
+                          <div className="h-px bg-border/50 mx-2" />
+
                           {/* Reference Images Section */}
-                          <div className="p-4 space-y-4 rounded-xl bg-card/30 border border-border/50 shadow-sm transition-all hover:bg-card/50">
-                            <div className="flex items-center justify-between">
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between px-2">
                               <span className="flex items-center gap-2.5 text-xs font-semibold tracking-tight text-muted-foreground">
                                 <Upload size={12} className="text-accent" />
                                 References

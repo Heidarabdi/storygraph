@@ -155,15 +155,9 @@ export const remove = mutation({
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 		}
 
-		// Cascading delete: assets, scenes, and frames
-		// 1. Delete all assets
-		const assets = await ctx.db
-			.query("assets")
-			.withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-			.collect();
-		for (const asset of assets) {
-			await ctx.db.delete(asset._id);
-		}
+		// Cascading delete: scenes and frames (Assets are now Org-scoped and preserved)
+		
+		// 1. Delete all scenes and their frames (Skipping assets as they are global now)
 
 		// 2. Delete all scenes and their frames
 		const scenes = await ctx.db

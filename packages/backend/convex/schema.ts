@@ -2,6 +2,8 @@ import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+// Triggering schema re-sync
+
 /**
  * Storygraph schema — org-based multi-tenant model.
  * Auth: ...authTables + custom users (app profile). See labs.convex.dev/auth/setup/schema.
@@ -105,18 +107,27 @@ export default defineSchema({
 		isPublic: v.optional(v.boolean()),
 	}).index("by_org", ["orgId"]),
 
+	assetCategories: defineTable({
+		orgId: v.id("organizations"),
+		name: v.string(),
+		description: v.optional(v.string()),
+		icon: v.optional(v.string()),
+	}).index("by_org", ["orgId"]),
+
 	assets: defineTable({
-		projectId: v.id("projects"),
-		type: assetType,
+		orgId: v.id("organizations"),
+		categoryId: v.id("assetCategories"),
 		name: v.string(),
 		description: v.optional(v.string()),
 		referenceImages: v.optional(v.array(v.string())), // storage IDs
-		metadata: v.optional(
-			v.record(v.string(), v.union(v.string(), v.number(), v.boolean())),
-		), // typed: style params, emotions, etc.
+		metadata: v.optional(v.any()),
 	})
-		.index("by_project", ["projectId"])
-		.index("by_project_type", ["projectId", "type"]),
+		.index("by_org", ["orgId"])
+		.index("by_org_category", ["orgId", "categoryId"])
+		.searchIndex("search_assets", {
+			searchField: "name",
+			filterFields: ["orgId", "categoryId"],
+		}),
 
 	scenes: defineTable({
 		projectId: v.id("projects"),
