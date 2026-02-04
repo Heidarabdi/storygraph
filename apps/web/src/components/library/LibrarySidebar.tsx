@@ -141,14 +141,14 @@ export function LibrarySidebar({
 
       {/* Storage Metrics */}
       <div className="mt-auto border-border/50 border-t pt-10 pb-10 px-8">
-        <div className="space-y-4 bg-primary p-8">
-          <p className="font-bold text-[9px] text-white/40 uppercase tracking-widest">
+        <div className="space-y-4 bg-primary p-8 shadow-xl">
+          <p className="font-bold text-[9px] text-primary-foreground/40 uppercase tracking-widest">
             Storage Metric
           </p>
-          <div className="h-1.5 w-full overflow-hidden bg-white/10">
+          <div className="h-1.5 w-full overflow-hidden bg-primary-foreground/10">
             <div className="h-full w-1/3 bg-accent" />
           </div>
-          <p className="font-bold text-[10px] text-white uppercase italic tracking-widest">
+          <p className="font-bold text-[10px] text-primary-foreground uppercase italic tracking-widest">
             4.2 GB / 20 GB USED
           </p>
         </div>

@@ -224,6 +224,7 @@ function AssetLibraryPage() {
                         image: asset.referenceImages?.[0],
                       }}
                       viewMode={viewMode}
+                      orgId={activeOrg?._id}
                     />
                   ))}
             </div>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -79,26 +80,24 @@ export function NewCategoryModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[calc(100%-2rem)] max-w-md rounded-none border-border p-0 sm:w-full">
-        <form onSubmit={handleSubmit} className="p-8 md:p-10">
-          <DialogHeader className="mb-8">
-            <div className="space-y-1">
-              <p className="font-bold text-[10px] text-accent uppercase tracking-[0.3em]">
-                {"New Sector Archive //"}
-              </p>
-              <DialogTitle className="font-serif text-4xl text-primary italic">
-                Initialize Sector
-              </DialogTitle>
-            </div>
+        <form onSubmit={handleSubmit} className="p-6 md:p-8">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-3xl text-primary italic tracking-tight">
+              New Category
+            </DialogTitle>
+            <DialogDescription className="mt-2 font-serif text-[11px] text-muted-foreground uppercase italic tracking-widest">
+              Organize your assets into collections.
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-8 py-4">
+          <div className="grid gap-6 py-8">
             {/* Category Name */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <Label
                 htmlFor="name"
-                className="font-bold text-[10px] text-muted-foreground/50 uppercase tracking-[0.3em]"
+                className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-[0.4em]"
               >
-                {"Sector Identity //"}
+                {"Category Name //"}
               </Label>
               <Input
                 id="name"
@@ -106,16 +105,16 @@ export function NewCategoryModal({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setName(e.target.value)
                 }
-                placeholder="e.g. CORE PROTOTYPES"
-                className="h-auto rounded-none border-border border-b bg-transparent p-0 pb-4 font-serif text-2xl italic shadow-none focus-visible:border-primary focus-visible:ring-0"
+                placeholder="e.g. Characters, Locations, Props"
+                className="h-auto rounded-none border-border border-x-0 border-t-0 border-b-2 bg-transparent p-0 pb-4 font-serif text-2xl italic shadow-none focus-visible:border-primary focus-visible:ring-0"
                 autoFocus
               />
             </div>
 
             {/* Icon Selection */}
-            <div className="space-y-3">
-              <Label className="font-bold text-[10px] text-muted-foreground/50 uppercase tracking-[0.3em]">
-                {"Visual Marker //"}
+            <div className="space-y-4">
+              <Label className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-[0.4em]">
+                {"Icon //"}
               </Label>
               <div className="grid grid-cols-5 gap-2">
                 {CATEGORY_ICONS.map((item) => (
@@ -137,7 +136,12 @@ export function NewCategoryModal({
             </div>
           </div>
 
-          <DialogFooter className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-end">
+          <DialogFooter className="flex-col gap-3 sm:flex-row sm:justify-end">
+            {!orgId && (
+              <p className="w-full text-center font-bold text-[9px] text-red-500 uppercase tracking-widest sm:text-left">
+                ⚠️ No Active Organization Selected
+              </p>
+            )}
             <Button
               type="button"
               variant="ghost"
@@ -151,7 +155,14 @@ export function NewCategoryModal({
               disabled={isSubmitting || !name.trim() || !orgId}
               className="h-12 rounded-none px-10 font-bold text-[10px] uppercase tracking-widest shadow-xl transition-all"
             >
-              {isSubmitting ? "Establishing..." : "Initialize Sector"}
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-2 w-2 animate-ping rounded-full bg-accent" />
+                  Creating...
+                </span>
+              ) : (
+                "Create Category"
+              )}
             </Button>
           </DialogFooter>
         </form>

@@ -66,14 +66,8 @@ export const create = mutation({
 			.first();
 		const order = lastFrame ? lastFrame.order + 1 : 1;
 
-		// Validate prompt (using name validator with custom label, max 500 chars)
+		// Validate prompt length if provided (max 500 chars)
 		const trimmedPrompt = args.prompt.trim();
-		if (!trimmedPrompt) {
-			throw new ConvexError({
-				code: "VALIDATION_ERROR",
-				message: "Frame prompt is required",
-			});
-		}
 		if (trimmedPrompt.length > 500) {
 			throw new ConvexError({
 				code: "VALIDATION_ERROR",
