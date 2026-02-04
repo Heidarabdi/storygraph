@@ -256,17 +256,17 @@ function DashboardPage() {
               ) : (
                 <button
                   onClick={() => setIsNewProjectModalOpen(true)}
-                  className="flex w-full items-center gap-6 bg-card/50 p-6 hover:bg-muted/30 transition-all border-x border-border/50 group"
+                  className="flex w-full items-center gap-4 md:gap-6 bg-card/50 p-4 md:p-6 hover:bg-muted/30 transition-all border-x border-border/50 group"
                   type="button"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center border border-border bg-muted group-hover:bg-card transition-colors">
-                    <Plus size={20} className="text-primary" />
+                  <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center border border-border bg-muted group-hover:bg-card transition-colors">
+                    <Plus size={24} className="text-primary" />
                   </div>
                   <div className="flex-1 text-left">
-                    <span className="block font-bold text-[10px] uppercase tracking-[0.2em]">
+                    <span className="block font-bold text-xs md:text-sm uppercase tracking-[0.15em]">
                       New Journey Protocol
                     </span>
-                    <span className="font-serif text-[9px] text-muted-foreground italic lowercase opacity-60">
+                    <span className="font-serif text-[10px] md:text-xs text-muted-foreground italic lowercase opacity-60">
                       initialize new visual journey entry
                     </span>
                   </div>

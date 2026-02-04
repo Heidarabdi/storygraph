@@ -11,6 +11,30 @@ import type { Id } from "./_generated/dataModel";
  * across all projects within that organization.
  */
 
+// Helper to resolve storage IDs to URLs for reference images
+async function resolveReferenceImages(
+	ctx: { storage: { getUrl: (id: Id<"_storage">) => Promise<string | null> } },
+	images: string[] | undefined
+): Promise<string[] | undefined> {
+	if (!images || images.length === 0) return undefined;
+	
+	const resolvedUrls = await Promise.all(
+		images.map(async (img) => {
+			// If already a URL, return as-is
+			if (img.startsWith("http")) return img;
+			// Otherwise it's a storage ID - resolve it
+			try {
+				const url = await ctx.storage.getUrl(img as unknown as Id<"_storage">);
+				return url || img; // Fallback to original if resolution fails
+			} catch {
+				return img;
+			}
+		})
+	);
+	
+	return resolvedUrls.filter((url): url is string => url !== null);
+}
+
 // List assets within an Organization
 export const list = query({
 	args: {
@@ -41,7 +65,17 @@ export const list = query({
 				);
 		}
 
-		return await q.collect();
+		const assets = await q.collect();
+
+		// Resolve reference image URLs
+		const assetsWithUrls = await Promise.all(
+			assets.map(async (asset) => ({
+				...asset,
+				referenceImages: await resolveReferenceImages(ctx, asset.referenceImages),
+			}))
+		);
+
+		return assetsWithUrls;
 	},
 });
 
@@ -77,9 +111,19 @@ export const listAll = query({
 			const results = await q.collect();
 			allAssets = allAssets.concat(results);
 		}
-		return allAssets;
+
+		// Resolve reference image URLs for all assets
+		const assetsWithUrls = await Promise.all(
+			allAssets.map(async (asset) => ({
+				...asset,
+				referenceImages: await resolveReferenceImages(ctx, asset.referenceImages),
+			}))
+		);
+
+		return assetsWithUrls;
 	},
 });
+
 
 export const search = query({
 	args: {

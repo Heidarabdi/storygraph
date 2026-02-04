@@ -73,8 +73,16 @@ export default defineSchema({
 		phoneVerificationTime: v.optional(v.number()),
 		isAnonymous: v.optional(v.boolean()),
 		// Storygraph app profile
+		bio: v.optional(v.string()),
+		role: v.optional(v.string()),
+		showInDirectory: v.optional(v.boolean()),
 		subscriptionTier: v.optional(subscriptionTier),
 		credits: v.optional(v.number()),
+		// Notification preferences
+		emailNotifications: v.optional(v.boolean()),
+		projectUpdates: v.optional(v.boolean()),
+		teamMentions: v.optional(v.boolean()),
+		weeklyDigest: v.optional(v.boolean()),
 	})
 		.index("email", ["email"])
 		.index("phone", ["phone"]),

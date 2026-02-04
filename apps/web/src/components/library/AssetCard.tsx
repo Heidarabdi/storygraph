@@ -21,7 +21,7 @@ interface Asset {
   _id: string;
   name: string;
   categoryId: string;
-  image?: string;
+  referenceImages?: string[];
   description?: string;
 }
 
@@ -42,35 +42,37 @@ export function AssetCard({ asset, viewMode, orgId }: AssetCardProps) {
   const category = categories?.find((c) => c._id === asset.categoryId);
   const categoryName = category?.name || "Asset";
 
+  // Get first reference image or fallback to generated avatar
+  const displayImage =
+    asset.referenceImages?.[0] ||
+    `https://api.dicebear.com/7.x/shapes/svg?seed=${asset.name}`;
+
   if (viewMode === "list") {
     return (
-      <div className="group grid cursor-pointer grid-cols-12 items-center gap-6 bg-card p-6 transition-all hover:bg-muted/30 border-b border-border/50 border-x">
-        <div className="col-span-1 aspect-square w-16 border border-border bg-muted overflow-hidden">
+      <div className="group grid cursor-pointer grid-cols-12 items-center gap-6 bg-card p-4 md:p-6 transition-all hover:bg-muted/30 border-b border-border/50 border-x">
+        <div className="col-span-2 md:col-span-1 aspect-square h-16 w-16 md:h-20 md:w-20 border border-border bg-muted overflow-hidden">
           <img
-            src={
-              asset.image ||
-              "https://api.dicebear.com/7.x/shapes/svg?seed=" + asset.name
-            }
+            src={displayImage}
             alt={asset.name}
             className="h-full w-full object-cover saturate-50 transition-all duration-500 group-hover:saturate-100 group-hover:scale-110"
           />
         </div>
-        <div className="col-span-11 flex items-center justify-between pl-4">
-          <div className="space-y-0.5">
-            <h4 className="font-bold text-[10px] text-primary uppercase tracking-[0.2em]">
+        <div className="col-span-10 md:col-span-11 flex items-center justify-between pl-2 md:pl-4">
+          <div className="space-y-1">
+            <h4 className="font-bold text-xs md:text-sm text-primary uppercase tracking-[0.15em]">
               {asset.name}
             </h4>
-            <p className="font-serif text-[9px] text-muted-foreground italic lowercase">
+            <p className="font-serif text-[10px] md:text-xs text-muted-foreground italic lowercase">
               {categoryName} // sg-manifest-entry-{asset._id.slice(-8)}
             </p>
           </div>
 
-          <div className="flex items-center gap-12">
+          <div className="flex items-center gap-6 md:gap-12">
             <div className="hidden md:block">
-              <p className="text-[8px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mb-1">
+              <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mb-1">
                 Access
               </p>
-              <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">
+              <p className="text-xs font-bold text-primary uppercase tracking-tighter">
                 Global
               </p>
             </div>
@@ -116,10 +118,7 @@ export function AssetCard({ asset, viewMode, orgId }: AssetCardProps) {
       {/* Portrait Image Area - Fills the top portion */}
       <div className="relative flex-1 min-h-0 overflow-hidden bg-neutral-200">
         <img
-          src={
-            asset.image ||
-            "https://api.dicebear.com/7.x/shapes/svg?seed=" + asset.name
-          }
+          src={displayImage}
           alt={asset.name}
           className="h-full w-full object-cover saturate-[0.4] transition-transform duration-700 group-hover:scale-105 group-hover:saturate-100"
         />

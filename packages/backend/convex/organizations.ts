@@ -1,7 +1,18 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
+import { ConvexError } from "convex/values";
 
+// Role type for organization members
+const orgMemberRole = v.union(
+	v.literal("admin"),
+	v.literal("member"),
+	v.literal("viewer"),
+);
+
+/**
+ * List all organizations the current user belongs to.
+ */
 export const list = query({
 	args: {},
 	handler: async (ctx) => {
@@ -32,7 +43,9 @@ export const list = query({
 	},
 });
 
-// Get members of a specific organization (for team page)
+/**
+ * Get members of a specific organization (for team page).
+ */
 export const getMembers = query({
 	args: { orgId: v.optional(v.id("organizations")) },
 	handler: async (ctx, args) => {
@@ -88,5 +101,179 @@ export const getMembers = query({
 		);
 
 		return members.filter((m) => m !== null);
+	},
+});
+
+/**
+ * Update organization settings.
+ * Only admins can update the organization.
+ */
+export const update = mutation({
+	args: {
+		orgId: v.id("organizations"),
+		name: v.optional(v.string()),
+		slug: v.optional(v.string()),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) {
+			throw new ConvexError({
+				code: "UNAUTHORIZED",
+				message: "You must be logged in",
+			});
+		}
+
+		// Verify user is admin of this org
+		const membership = await ctx.db
+			.query("organizationMembers")
+			.withIndex("by_org_user", (q) =>
+				q.eq("orgId", args.orgId).eq("userId", userId),
+			)
+			.first();
+
+		if (!membership || membership.role !== "admin") {
+			throw new ConvexError({
+				code: "FORBIDDEN",
+				message: "Only admins can update organization settings",
+			});
+		}
+
+		const updates: Record<string, unknown> = {};
+		if (args.name !== undefined) updates.name = args.name;
+		if (args.slug !== undefined) updates.slug = args.slug;
+
+		if (Object.keys(updates).length > 0) {
+			await ctx.db.patch(args.orgId, updates);
+		}
+
+		return { success: true };
+	},
+});
+
+/**
+ * Update a member's role in the organization.
+ * Only admins can change roles.
+ */
+export const updateMemberRole = mutation({
+	args: {
+		membershipId: v.id("organizationMembers"),
+		role: orgMemberRole,
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) {
+			throw new ConvexError({
+				code: "UNAUTHORIZED",
+				message: "You must be logged in",
+			});
+		}
+
+		// Get the membership being updated
+		const targetMembership = await ctx.db.get(args.membershipId);
+		if (!targetMembership) {
+			throw new ConvexError({
+				code: "NOT_FOUND",
+				message: "Membership not found",
+			});
+		}
+
+		// Verify current user is admin of this org
+		const currentUserMembership = await ctx.db
+			.query("organizationMembers")
+			.withIndex("by_org_user", (q) =>
+				q.eq("orgId", targetMembership.orgId).eq("userId", userId),
+			)
+			.first();
+
+		if (!currentUserMembership || currentUserMembership.role !== "admin") {
+			throw new ConvexError({
+				code: "FORBIDDEN",
+				message: "Only admins can change member roles",
+			});
+		}
+
+		// Prevent demoting the last admin
+		if (
+			targetMembership.role === "admin" &&
+			args.role !== "admin"
+		) {
+			const adminCount = await ctx.db
+				.query("organizationMembers")
+				.withIndex("by_org", (q) => q.eq("orgId", targetMembership.orgId))
+				.filter((q) => q.eq(q.field("role"), "admin"))
+				.collect();
+
+			if (adminCount.length <= 1) {
+				throw new ConvexError({
+					code: "FORBIDDEN",
+					message: "Cannot demote the last admin",
+				});
+			}
+		}
+
+		await ctx.db.patch(args.membershipId, { role: args.role });
+		return { success: true };
+	},
+});
+
+/**
+ * Remove a member from the organization.
+ * Only admins can remove members.
+ */
+export const removeMember = mutation({
+	args: {
+		membershipId: v.id("organizationMembers"),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) {
+			throw new ConvexError({
+				code: "UNAUTHORIZED",
+				message: "You must be logged in",
+			});
+		}
+
+		// Get the membership being removed
+		const targetMembership = await ctx.db.get(args.membershipId);
+		if (!targetMembership) {
+			throw new ConvexError({
+				code: "NOT_FOUND",
+				message: "Membership not found",
+			});
+		}
+
+		// Verify current user is admin of this org
+		const currentUserMembership = await ctx.db
+			.query("organizationMembers")
+			.withIndex("by_org_user", (q) =>
+				q.eq("orgId", targetMembership.orgId).eq("userId", userId),
+			)
+			.first();
+
+		if (!currentUserMembership || currentUserMembership.role !== "admin") {
+			throw new ConvexError({
+				code: "FORBIDDEN",
+				message: "Only admins can remove members",
+			});
+		}
+
+		// Prevent removing the last admin
+		if (targetMembership.role === "admin") {
+			const adminCount = await ctx.db
+				.query("organizationMembers")
+				.withIndex("by_org", (q) => q.eq("orgId", targetMembership.orgId))
+				.filter((q) => q.eq(q.field("role"), "admin"))
+				.collect();
+
+			if (adminCount.length <= 1) {
+				throw new ConvexError({
+					code: "FORBIDDEN",
+					message: "Cannot remove the last admin",
+				});
+			}
+		}
+
+		await ctx.db.delete(args.membershipId);
+		return { success: true };
 	},
 });

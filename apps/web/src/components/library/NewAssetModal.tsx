@@ -21,7 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, X, Loader2 } from "lucide-react";
+import { useFileUpload } from "@/hooks/useFileUpload";
 
 interface NewAssetModalProps {
   isOpen: boolean;
@@ -43,9 +44,11 @@ export function NewAssetModal({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createAsset = useMutation(api.assets.create);
+  const { upload, isUploading } = useFileUpload();
 
   const categories = useQuery(
     api.assetCategories.listAll,
@@ -65,23 +68,35 @@ export function NewAssetModal({
       setName("");
       setDescription("");
       setPreviewImage(null);
+      setUploadedImageUrl(null);
       if (!defaultCategoryId) setSelectedCategoryId("");
     }
   }, [isOpen, defaultCategoryId]);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload the file
+    try {
+      const { storageId, url } = await upload(file);
+      setUploadedImageUrl(url || storageId);
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      setPreviewImage(null);
     }
   };
 
   const handleRemoveImage = () => {
     setPreviewImage(null);
+    setUploadedImageUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -93,13 +108,12 @@ export function NewAssetModal({
 
     setIsSubmitting(true);
     try {
-      // TODO: Add file upload logic here when implementing storage
       await createAsset({
         orgId: orgId as Id<"organizations">,
         categoryId: selectedCategoryId as Id<"assetCategories">,
         name: name.trim(),
         description: description.trim() || undefined,
-        referenceImages: undefined, // Will be populated when file upload is implemented
+        referenceImages: uploadedImageUrl ? [uploadedImageUrl] : undefined,
       });
       onClose();
     } catch (error) {
@@ -216,6 +230,11 @@ export function NewAssetModal({
                     alt="Preview"
                     className="w-full h-full object-cover"
                   />
+                  {isUploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                      <Loader2 className="h-5 w-5 animate-spin text-white" />
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={handleRemoveImage}
@@ -228,7 +247,8 @@ export function NewAssetModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-3 w-full h-12 px-4 border border-dashed border-border hover:border-primary/50 bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer"
+                  disabled={isUploading}
+                  className="flex items-center gap-3 w-full h-12 px-4 border border-dashed border-border hover:border-primary/50 bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <ImagePlus className="h-5 w-5 text-muted-foreground/40" />
                   <span className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-widest">
@@ -264,7 +284,11 @@ export function NewAssetModal({
             <Button
               type="submit"
               disabled={
-                isSubmitting || !name.trim() || !orgId || !selectedCategoryId
+                isSubmitting ||
+                isUploading ||
+                !name.trim() ||
+                !orgId ||
+                !selectedCategoryId
               }
               className="h-12 rounded-none px-10 font-bold text-[10px] uppercase tracking-widest shadow-xl transition-all"
             >

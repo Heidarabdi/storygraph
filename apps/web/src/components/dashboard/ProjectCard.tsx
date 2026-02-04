@@ -30,13 +30,13 @@ export function ProjectCard({
 }: ProjectCardProps) {
   if (viewMode === "list") {
     return (
-      <div className="group relative border-b border-border/50 border-x bg-card p-6 transition-all hover:bg-muted/30 last:border-b-0">
+      <div className="group relative border-b border-border/50 border-x bg-card p-4 md:p-6 transition-all hover:bg-muted/30 last:border-b-0">
         <Link
           to="/editor/$projectId"
           params={{ projectId: project._id }}
-          className="grid grid-cols-12 items-center gap-6"
+          className="grid grid-cols-12 items-center gap-4 md:gap-6"
         >
-          <div className="col-span-1 aspect-[2.39/1] w-24 border border-border bg-neutral-200 overflow-hidden">
+          <div className="col-span-3 md:col-span-2 aspect-[2.39/1] w-full md:w-32 border border-border bg-neutral-200 overflow-hidden">
             <img
               src={
                 project.thumbnail ||
@@ -46,32 +46,32 @@ export function ProjectCard({
               className="h-full w-full object-cover saturate-50 transition-all duration-500 group-hover:saturate-100 group-hover:scale-110"
             />
           </div>
-          <div className="col-span-11 flex items-center justify-between pl-4">
-            <div className="space-y-0.5">
-              <h3 className="font-bold text-[10px] text-primary uppercase tracking-[0.2em] transition-colors group-hover:text-accent">
+          <div className="col-span-9 md:col-span-10 flex items-center justify-between pl-2 md:pl-4">
+            <div className="space-y-1">
+              <h3 className="font-bold text-xs md:text-sm text-primary uppercase tracking-[0.15em] transition-colors group-hover:text-accent">
                 {project.name}
               </h3>
-              <p className="font-serif text-[9px] text-muted-foreground italic">
+              <p className="font-serif text-[10px] md:text-xs text-muted-foreground italic">
                 Created on{" "}
                 {new Date(project._creationTime).toLocaleDateString()}
               </p>
             </div>
 
-            <div className="flex items-center gap-12">
+            <div className="flex items-center gap-6 md:gap-12">
               <div className="hidden md:block">
-                <p className="text-[8px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mb-1">
+                <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mb-1">
                   Active Scene
                 </p>
-                <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">
+                <p className="text-xs font-bold text-primary uppercase tracking-tighter">
                   Scene 01 ACTIVE
                 </p>
               </div>
 
-              <div className="text-right">
-                <p className="text-[8px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mb-1">
+              <div className="text-right hidden sm:block">
+                <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mb-1">
                   Status
                 </p>
-                <p className="text-[9px] font-bold text-accent uppercase tracking-tighter">
+                <p className="text-xs font-bold text-accent uppercase tracking-tighter">
                   Refining Frame 04
                 </p>
               </div>

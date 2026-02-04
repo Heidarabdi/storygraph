@@ -3,6 +3,25 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { validateDescription, validateName } from "./lib/validation";
 
+import type { Id } from "./_generated/dataModel";
+
+// Helper to resolve storage ID to URL
+async function resolveThumbnailUrl(
+	ctx: { storage: { getUrl: (id: Id<"_storage">) => Promise<string | null> } },
+	thumbnail: string | undefined
+): Promise<string | undefined> {
+	if (!thumbnail) return undefined;
+	// If already a URL, return as-is
+	if (thumbnail.startsWith("http")) return thumbnail;
+	// Otherwise it's a storage ID - resolve it
+	try {
+		const url = await ctx.storage.getUrl(thumbnail as unknown as Id<"_storage">);
+		return url || undefined;
+	} catch {
+		return undefined;
+	}
+}
+
 // List projects for a specific organization
 export const list = query({
 	args: { orgId: v.id("organizations") },
@@ -27,9 +46,18 @@ export const list = query({
 			.order("desc") // default sort by creation time
 			.collect();
 
-		return projects;
+		// Resolve thumbnail URLs
+		const projectsWithUrls = await Promise.all(
+			projects.map(async (project) => ({
+				...project,
+				thumbnail: await resolveThumbnailUrl(ctx, project.thumbnail),
+			}))
+		);
+
+		return projectsWithUrls;
 	},
 });
+
 
 // Create a new project
 export const create = mutation({
@@ -38,6 +66,7 @@ export const create = mutation({
 		name: v.string(),
 		description: v.optional(v.string()),
 		isPublic: v.optional(v.boolean()),
+		thumbnail: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
@@ -63,12 +92,56 @@ export const create = mutation({
 			name: validatedName,
 			description: validatedDescription,
 			isPublic: args.isPublic ?? false,
-			// thumbnail: TODO generate pattern
+			thumbnail: args.thumbnail,
 		});
 
 		return projectId;
 	},
 });
+
+// Update a project
+export const update = mutation({
+	args: {
+		projectId: v.id("projects"),
+		name: v.optional(v.string()),
+		description: v.optional(v.string()),
+		isPublic: v.optional(v.boolean()),
+		thumbnail: v.optional(v.string()),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId)
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		const project = await ctx.db.get(args.projectId);
+		if (!project)
+			throw new ConvexError({ code: "NOT_FOUND", message: "Project not found" });
+
+		const membership = await ctx.db
+			.query("organizationMembers")
+			.withIndex("by_org_user", (q) =>
+				q.eq("orgId", project.orgId).eq("userId", userId),
+			)
+			.first();
+
+		if (!membership || membership.role === "viewer")
+			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		const updates: Record<string, unknown> = {};
+		if (args.name !== undefined) updates.name = validateName(args.name, "Project name");
+		if (args.description !== undefined) updates.description = validateDescription(args.description);
+		if (args.isPublic !== undefined) updates.isPublic = args.isPublic;
+		if (args.thumbnail !== undefined) updates.thumbnail = args.thumbnail;
+
+		if (Object.keys(updates).length === 0) {
+			return { success: true, message: "No updates provided" };
+		}
+
+		await ctx.db.patch(args.projectId, updates);
+		return { success: true };
+	},
+});
+
 
 // Recent projects (across all user's orgs or specific?
 // For now, let's stick to org-scoped for the dashboard if a folder is selected,
@@ -100,13 +173,24 @@ export const getRecent = query({
 			.first();
 		if (!membership) return [];
 
-		return await ctx.db
+		const projects = await ctx.db
 			.query("projects")
 			.withIndex("by_org", (q) => q.eq("orgId", orgId))
 			.order("desc")
 			.take(10);
+
+		// Resolve thumbnail URLs
+		const projectsWithUrls = await Promise.all(
+			projects.map(async (project) => ({
+				...project,
+				thumbnail: await resolveThumbnailUrl(ctx, project.thumbnail),
+			}))
+		);
+
+		return projectsWithUrls;
 	},
 });
+
 
 // Get a single project
 export const get = query({
