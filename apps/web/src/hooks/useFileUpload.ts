@@ -1,7 +1,7 @@
-import { useMutation } from "convex/react";
 import { api } from "@storygraph/backend/convex/_generated/api";
 import type { Id } from "@storygraph/backend/convex/_generated/dataModel";
-import { useState, useCallback } from "react";
+import { useMutation } from "convex/react";
+import { useCallback, useState } from "react";
 
 interface UploadResult {
 	storageId: Id<"_storage">;
@@ -24,46 +24,51 @@ export function useFileUpload(): UseFileUploadReturn {
 	const [isUploading, setIsUploading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const upload = useCallback(async (file: File): Promise<UploadResult> => {
-		setIsUploading(true);
-		setError(null);
+	const upload = useCallback(
+		async (file: File): Promise<UploadResult> => {
+			setIsUploading(true);
+			setError(null);
 
-		try {
-			// Step 1: Get a short-lived upload URL
-			const uploadUrl = await generateUploadUrl();
+			try {
+				// Step 1: Get a short-lived upload URL
+				const uploadUrl = await generateUploadUrl();
 
-			// Step 2: POST the file to the URL
-			const response = await fetch(uploadUrl, {
-				method: "POST",
-				headers: { "Content-Type": file.type },
-				body: file,
-			});
+				// Step 2: POST the file to the URL
+				const response = await fetch(uploadUrl, {
+					method: "POST",
+					headers: { "Content-Type": file.type },
+					body: file,
+				});
 
-			if (!response.ok) {
-				throw new Error(`Upload failed: ${response.statusText}`);
+				if (!response.ok) {
+					throw new Error(`Upload failed: ${response.statusText}`);
+				}
+
+				const { storageId } = await response.json();
+
+				// Step 3: Get the public URL for this storage ID
+				const url = await getUrlMutation({
+					storageId: storageId as Id<"_storage">,
+				});
+
+				if (!url) {
+					throw new Error("Failed to get URL for uploaded file");
+				}
+
+				return {
+					storageId: storageId as Id<"_storage">,
+					url,
+				};
+			} catch (err) {
+				const message = err instanceof Error ? err.message : "Upload failed";
+				setError(message);
+				throw err;
+			} finally {
+				setIsUploading(false);
 			}
-
-			const { storageId } = await response.json();
-
-			// Step 3: Get the public URL for this storage ID
-			const url = await getUrlMutation({ storageId: storageId as Id<"_storage"> });
-
-			if (!url) {
-				throw new Error("Failed to get URL for uploaded file");
-			}
-
-			return {
-				storageId: storageId as Id<"_storage">,
-				url,
-			};
-		} catch (err) {
-			const message = err instanceof Error ? err.message : "Upload failed";
-			setError(message);
-			throw err;
-		} finally {
-			setIsUploading(false);
-		}
-	}, [generateUploadUrl, getUrlMutation]);
+		},
+		[generateUploadUrl, getUrlMutation],
+	);
 
 	return { upload, isUploading, error };
 }

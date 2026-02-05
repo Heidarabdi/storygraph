@@ -73,7 +73,10 @@ export const update = mutation({
 
 		const category = await ctx.db.get(args.id);
 		if (!category)
-			throw new ConvexError({ code: "NOT_FOUND", message: "Category not found" });
+			throw new ConvexError({
+				code: "NOT_FOUND",
+				message: "Category not found",
+			});
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -108,7 +111,10 @@ export const remove = mutation({
 
 		const category = await ctx.db.get(args.id);
 		if (!category)
-			throw new ConvexError({ code: "NOT_FOUND", message: "Category not found" });
+			throw new ConvexError({
+				code: "NOT_FOUND",
+				message: "Category not found",
+			});
 
 		const membership = await ctx.db
 			.query("organizationMembers")

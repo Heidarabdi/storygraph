@@ -17,13 +17,13 @@ type StorageContext = {
  */
 export async function resolveStorageUrl(
 	ctx: StorageContext,
-	value: string | undefined | null
+	value: string | undefined | null,
 ): Promise<string | null> {
 	if (!value) return null;
-	
+
 	// If already a URL, return as-is
 	if (value.startsWith("http")) return value;
-	
+
 	// Otherwise it's a storage ID - resolve it
 	try {
 		const url = await ctx.storage.getUrl(value as unknown as Id<"_storage">);
@@ -41,14 +41,14 @@ export async function resolveStorageUrl(
  */
 export async function resolveStorageUrls(
 	ctx: StorageContext,
-	values: string[] | undefined | null
+	values: string[] | undefined | null,
 ): Promise<string[] | undefined> {
 	if (!values || values.length === 0) return undefined;
-	
+
 	const resolvedUrls = await Promise.all(
-		values.map((value) => resolveStorageUrl(ctx, value))
+		values.map((value) => resolveStorageUrl(ctx, value)),
 	);
-	
+
 	// Filter out nulls - only return valid URLs
 	const validUrls = resolvedUrls.filter((url): url is string => url !== null);
 	return validUrls.length > 0 ? validUrls : undefined;

@@ -1,13 +1,13 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
+import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { validateDescription, validateName } from "./lib/validation";
 import { resolveStorageUrls } from "./lib/storage";
-import type { Id } from "./_generated/dataModel";
+import { validateDescription, validateName } from "./lib/validation";
 
 /**
  * ASSET LIBRARY PHILOSOPHY:
- * Assets are first-class citizens of an Organization. 
+ * Assets are first-class citizens of an Organization.
  * They are created in the Library (org-level) and are globally accessible
  * across all projects within that organization.
  */
@@ -37,8 +37,10 @@ export const list = query({
 		if (args.categoryId) {
 			q = ctx.db
 				.query("assets")
-				.withIndex("by_org_category", (qx) => 
-					qx.eq("orgId", args.orgId).eq("categoryId", args.categoryId!)
+				.withIndex("by_org_category", (qx) =>
+					qx
+						.eq("orgId", args.orgId)
+						.eq("categoryId", args.categoryId as Id<"assetCategories">),
 				);
 		}
 
@@ -49,7 +51,7 @@ export const list = query({
 			assets.map(async (asset) => ({
 				...asset,
 				referenceImages: await resolveStorageUrls(ctx, asset.referenceImages),
-			}))
+			})),
 		);
 
 		return assetsWithUrls;
@@ -72,17 +74,19 @@ export const listAll = query({
 
 		if (memberships.length === 0) return [];
 
-		let allAssets: any[] = [];
+		let allAssets: Doc<"assets">[] = [];
 		for (const membership of memberships) {
 			let q = ctx.db
 				.query("assets")
 				.withIndex("by_org", (qx) => qx.eq("orgId", membership.orgId));
-			
+
 			if (args.categoryId) {
 				q = ctx.db
 					.query("assets")
-					.withIndex("by_org_category", (qx) => 
-						qx.eq("orgId", membership.orgId).eq("categoryId", args.categoryId!)
+					.withIndex("by_org_category", (qx) =>
+						qx
+							.eq("orgId", membership.orgId)
+							.eq("categoryId", args.categoryId as Id<"assetCategories">),
 					);
 			}
 			const results = await q.collect();
@@ -94,13 +98,12 @@ export const listAll = query({
 			allAssets.map(async (asset) => ({
 				...asset,
 				referenceImages: await resolveStorageUrls(ctx, asset.referenceImages),
-			}))
+			})),
 		);
 
 		return assetsWithUrls;
 	},
 });
-
 
 export const search = query({
 	args: {
@@ -114,11 +117,14 @@ export const search = query({
 
 		if (args.query.trim().length === 0) return [];
 
-		let assetsQuery = ctx.db.query("assets").withSearchIndex("search_assets", (q) => {
-			let searchQ = q.search("name", args.query).eq("orgId", args.orgId);
-			if (args.categoryId) searchQ = searchQ.eq("categoryId", args.categoryId);
-			return searchQ;
-		});
+		const assetsQuery = ctx.db
+			.query("assets")
+			.withSearchIndex("search_assets", (q) => {
+				let searchQ = q.search("name", args.query).eq("orgId", args.orgId);
+				if (args.categoryId)
+					searchQ = searchQ.eq("categoryId", args.categoryId);
+				return searchQ;
+			});
 
 		return await assetsQuery.collect();
 	},
@@ -188,11 +194,15 @@ export const update = mutation({
 		if (!membership || membership.role === "viewer")
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const updates: any = {};
-		if (args.name !== undefined) updates.name = validateName(args.name, "Asset name");
-		if (args.description !== undefined) updates.description = validateDescription(args.description);
+		// biome-ignore lint/suspicious/noExplicitAny: Patch object has mixed types
+		const updates: Record<string, any> = {};
+		if (args.name !== undefined)
+			updates.name = validateName(args.name, "Asset name");
+		if (args.description !== undefined)
+			updates.description = validateDescription(args.description);
 		if (args.categoryId !== undefined) updates.categoryId = args.categoryId;
-		if (args.referenceImages !== undefined) updates.referenceImages = args.referenceImages;
+		if (args.referenceImages !== undefined)
+			updates.referenceImages = args.referenceImages;
 		if (args.metadata !== undefined) updates.metadata = args.metadata;
 
 		await ctx.db.patch(args.id, updates);

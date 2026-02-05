@@ -13,6 +13,7 @@
 		"@auth/core": "catalog:",
 		"@convex-dev/agent": "catalog:",
 		"@convex-dev/auth": "catalog:",
+		"@convex-dev/rate-limiter": "^0.3.2",
 		"ai": "^5.0.117",
 		"convex": "catalog:",
 		"dotenv": "catalog:",

@@ -1,7 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { ConvexError } from "convex/values";
 
 /**
  * Get the current authenticated user's profile.
@@ -22,7 +21,8 @@ export const viewer = query({
 		if (user.image && !user.image.startsWith("http")) {
 			try {
 				// Import Id type from _generated/dataModel for proper typing
-				const storageId = user.image as unknown as import("./_generated/dataModel").Id<"_storage">;
+				const storageId =
+					user.image as unknown as import("./_generated/dataModel").Id<"_storage">;
 				const url = await ctx.storage.getUrl(storageId);
 				if (url) imageUrl = url;
 			} catch {

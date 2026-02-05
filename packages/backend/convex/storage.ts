@@ -1,7 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { ConvexError } from "convex/values";
+import { rateLimiter } from "./rateLimits";
 
 /**
  * File Storage API
@@ -24,6 +24,9 @@ export const generateUploadUrl = mutation({
 				message: "You must be logged in to upload files",
 			});
 		}
+
+		await rateLimiter.limit(ctx, "uploadFile", { key: userId, throws: true });
+
 		return await ctx.storage.generateUploadUrl();
 	},
 });

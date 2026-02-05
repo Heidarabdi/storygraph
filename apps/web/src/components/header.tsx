@@ -83,7 +83,7 @@ const NavLinkItem = ({
 
 	return (
 		<Link
-			to={to as any}
+			to={to}
 			className={
 				mobile
 					? mobileNavLinkClass(to, currentPath)

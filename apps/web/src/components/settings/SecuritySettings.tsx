@@ -1,9 +1,62 @@
+import { useAuthActions } from "@convex-dev/auth/react";
+import { api } from "@storygraph/backend/convex/_generated/api";
+import { useQuery } from "convex/react";
 import { Eye, EyeOff, Monitor, Smartphone } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function SecuritySettings() {
+	const { signIn } = useAuthActions();
+	const user = useQuery(api.users.viewer);
 	const [showPassword, setShowPassword] = useState(false);
 	const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+	const [step, setStep] = useState<"initial" | "verification">("initial");
+	const [isLoading, setIsLoading] = useState(false);
+
+	const handleSendCode = async () => {
+		if (!user?.email) {
+			toast.error("User email not found");
+			return;
+		}
+		setIsLoading(true);
+		try {
+			await signIn("password", { flow: "reset", email: user.email });
+			setStep("verification");
+			toast.success("Verification code sent to your email");
+		} catch (error) {
+			toast.error("Failed to send verification code");
+			console.error(error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleUpdatePassword = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		if (!user?.email) return;
+
+		const formData = new FormData(e.currentTarget);
+		const code = formData.get("code") as string;
+		const newPassword = formData.get("newPassword") as string;
+
+		setIsLoading(true);
+		try {
+			await signIn("password", {
+				flow: "reset-verification",
+				email: user.email,
+				code,
+				newPassword,
+			});
+			toast.success("Password updated successfully");
+			setStep("initial");
+			// Optional: Clear form or reset internal auth state if needed
+		} catch (error) {
+			toast.error("Failed to update password. Invalid code?");
+			console.error(error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
 	return (
 		<div className="fade-in slide-in-from-bottom-4 animate-in duration-500">
@@ -24,48 +77,93 @@ export default function SecuritySettings() {
 							Change Password
 						</h3>
 						<p className="font-serif text-muted-foreground text-xs italic">
-							Regularly updating your password ensures studio integrity.
+							Secure your account by verifying your email and setting a new
+							password.
 						</p>
 					</div>
-					<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-						<div className="space-y-2">
-							<label className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-								Current Password
-							</label>
-							<div className="relative">
-								<input
-									className="w-full rounded-none border border-border bg-background px-4 py-3 text-foreground text-sm outline-none focus:border-primary focus:ring-0"
-									placeholder="••••••••••••"
-									type={showPassword ? "text" : "password"}
-								/>
+
+					{step === "initial" ? (
+						<div className="space-y-6">
+							<p className="text-muted-foreground text-sm">
+								To change your password, we'll send a verification code to your
+								email address
+								{user?.email ? (
+									<span className="font-bold text-foreground">
+										{" "}
+										({user.email})
+									</span>
+								) : (
+									""
+								)}
+								.
+							</p>
+							<div className="flex justify-end">
 								<button
-									onClick={() => setShowPassword(!showPassword)}
-									className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground outline-none transition-colors hover:text-primary"
+									onClick={handleSendCode}
+									disabled={isLoading}
+									className="bg-primary px-8 py-3 font-bold text-[10px] text-primary-foreground uppercase tracking-widest shadow-lg transition-all hover:bg-neutral-800 disabled:opacity-50"
 									type="button"
 								>
-									{showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+									{isLoading ? "Sending..." : "Send Verification Code"}
 								</button>
 							</div>
 						</div>
-						<div className="space-y-2">
-							<label className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-								New Password
-							</label>
-							<input
-								className="w-full rounded-none border border-border bg-background px-4 py-3 text-foreground text-sm outline-none focus:border-primary focus:ring-0"
-								placeholder="••••••••••••"
-								type="password"
-							/>
-						</div>
-					</div>
-					<div className="mt-8 flex justify-end">
-						<button
-							className="bg-primary px-8 py-3 font-bold text-[10px] text-primary-foreground uppercase tracking-widest shadow-lg transition-all hover:bg-neutral-800"
-							type="button"
-						>
-							Update Password
-						</button>
-					</div>
+					) : (
+						<form onSubmit={handleUpdatePassword} className="space-y-6">
+							<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+								<div className="space-y-2">
+									<label className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
+										Verification Code
+									</label>
+									<input
+										name="code"
+										className="w-full rounded-none border border-border bg-background px-4 py-3 text-foreground text-sm outline-none focus:border-primary focus:ring-0"
+										placeholder="Enter code from email"
+										type="text"
+										required
+									/>
+								</div>
+								<div className="space-y-2">
+									<label className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
+										New Password
+									</label>
+									<div className="relative">
+										<input
+											name="newPassword"
+											className="w-full rounded-none border border-border bg-background px-4 py-3 text-foreground text-sm outline-none focus:border-primary focus:ring-0"
+											placeholder="••••••••••••"
+											type={showPassword ? "text" : "password"}
+											required
+											minLength={8}
+										/>
+										<button
+											onClick={() => setShowPassword(!showPassword)}
+											className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground outline-none transition-colors hover:text-primary"
+											type="button"
+										>
+											{showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+										</button>
+									</div>
+								</div>
+							</div>
+							<div className="flex justify-end gap-4">
+								<button
+									onClick={() => setStep("initial")}
+									className="px-6 py-3 font-bold text-[10px] text-muted-foreground uppercase tracking-widest transition-colors hover:text-foreground"
+									type="button"
+								>
+									Cancel
+								</button>
+								<button
+									type="submit"
+									disabled={isLoading}
+									className="bg-primary px-8 py-3 font-bold text-[10px] text-primary-foreground uppercase tracking-widest shadow-lg transition-all hover:bg-neutral-800 disabled:opacity-50"
+								>
+									{isLoading ? "Updating..." : "Set New Password"}
+								</button>
+							</div>
+						</form>
+					)}
 				</section>
 
 				{/* Two-Factor Authentication */}

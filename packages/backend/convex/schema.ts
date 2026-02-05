@@ -32,7 +32,7 @@ const orgPlan = v.union(
 	v.literal("enterprise"),
 );
 
-const assetType = v.union(
+const _assetType = v.union(
 	v.literal("character"),
 	v.literal("environment"),
 	v.literal("prop"),

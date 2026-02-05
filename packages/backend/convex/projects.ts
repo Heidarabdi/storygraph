@@ -1,10 +1,10 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { validateDescription, validateName } from "./lib/validation";
-import { resolveStorageUrl } from "./lib/storage";
-
 import type { Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
+import { resolveStorageUrl } from "./lib/storage";
+import { validateDescription, validateName } from "./lib/validation";
+import { rateLimiter } from "./rateLimits";
 
 // List projects for a specific organization
 export const list = query({
@@ -34,14 +34,14 @@ export const list = query({
 		const projectsWithUrls = await Promise.all(
 			projects.map(async (project) => ({
 				...project,
-				thumbnail: (await resolveStorageUrl(ctx, project.thumbnail)) || undefined,
-			}))
+				thumbnail:
+					(await resolveStorageUrl(ctx, project.thumbnail)) || undefined,
+			})),
 		);
 
 		return projectsWithUrls;
 	},
 });
-
 
 // Create a new project
 export const create = mutation({
@@ -56,6 +56,14 @@ export const create = mutation({
 		const userId = await getAuthUserId(ctx);
 		if (!userId)
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		// Rate limit: 100 projects per day per user? or global?
+		// "createProject" defined in rateLimits.ts is fixed window.
+		// Let's key by userId to limit per user.
+		await rateLimiter.limit(ctx, "createProject", {
+			key: userId,
+			throws: true,
+		});
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -99,7 +107,10 @@ export const update = mutation({
 
 		const project = await ctx.db.get(args.projectId);
 		if (!project)
-			throw new ConvexError({ code: "NOT_FOUND", message: "Project not found" });
+			throw new ConvexError({
+				code: "NOT_FOUND",
+				message: "Project not found",
+			});
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -112,8 +123,10 @@ export const update = mutation({
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
 		const updates: Record<string, unknown> = {};
-		if (args.name !== undefined) updates.name = validateName(args.name, "Project name");
-		if (args.description !== undefined) updates.description = validateDescription(args.description);
+		if (args.name !== undefined)
+			updates.name = validateName(args.name, "Project name");
+		if (args.description !== undefined)
+			updates.description = validateDescription(args.description);
 		if (args.isPublic !== undefined) updates.isPublic = args.isPublic;
 		if (args.thumbnail !== undefined) updates.thumbnail = args.thumbnail;
 
@@ -125,7 +138,6 @@ export const update = mutation({
 		return { success: true };
 	},
 });
-
 
 // Recent projects (across all user's orgs or specific?
 // For now, let's stick to org-scoped for the dashboard if a folder is selected,
@@ -167,14 +179,14 @@ export const getRecent = query({
 		const projectsWithUrls = await Promise.all(
 			projects.map(async (project) => ({
 				...project,
-				thumbnail: (await resolveStorageUrl(ctx, project.thumbnail)) || undefined,
-			}))
+				thumbnail:
+					(await resolveStorageUrl(ctx, project.thumbnail)) || undefined,
+			})),
 		);
 
 		return projectsWithUrls;
 	},
 });
-
 
 // Get a single project
 export const get = query({
@@ -224,7 +236,7 @@ export const remove = mutation({
 		}
 
 		// Cascading delete: scenes and frames (Assets are now Org-scoped and preserved)
-		
+
 		// 1. Delete all scenes and their frames (Skipping assets as they are global now)
 
 		// 2. Delete all scenes and their frames
@@ -247,7 +259,9 @@ export const remove = mutation({
 		if (project.thumbnail) {
 			// Extract storage ID from URL if it's a Convex storage URL
 			// Format: https://xxx.convex.cloud/api/storage/{storageId}
-			const match = project.thumbnail.match(/\/api\/storage\/([a-zA-Z0-9_-]+)$/);
+			const match = project.thumbnail.match(
+				/\/api\/storage\/([a-zA-Z0-9_-]+)$/,
+			);
 			if (match) {
 				try {
 					await ctx.storage.delete(match[1] as Id<"_storage">);

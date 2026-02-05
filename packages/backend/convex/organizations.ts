@@ -1,7 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { ConvexError } from "convex/values";
 import { resolveStorageUrl } from "./lib/storage";
 
 // Role type for organization members
@@ -86,10 +85,10 @@ export const getMembers = query({
 			memberships.map(async (membership) => {
 				const user = await ctx.db.get(membership.userId);
 				if (!user) return null;
-				
+
 				// Resolve avatar URL (handles both storage IDs and URLs)
 				const resolvedAvatar = await resolveStorageUrl(ctx, user.image);
-				
+
 				return {
 					id: membership._id,
 					userId: user._id,
@@ -197,10 +196,7 @@ export const updateMemberRole = mutation({
 		}
 
 		// Prevent demoting the last admin
-		if (
-			targetMembership.role === "admin" &&
-			args.role !== "admin"
-		) {
+		if (targetMembership.role === "admin" && args.role !== "admin") {
 			const adminCount = await ctx.db
 				.query("organizationMembers")
 				.withIndex("by_org", (q) => q.eq("orgId", targetMembership.orgId))
