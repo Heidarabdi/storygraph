@@ -2,6 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { validateDescription, validateName } from "./lib/validation";
+import { resolveStorageUrls } from "./lib/storage";
 import type { Id } from "./_generated/dataModel";
 
 /**
@@ -10,30 +11,6 @@ import type { Id } from "./_generated/dataModel";
  * They are created in the Library (org-level) and are globally accessible
  * across all projects within that organization.
  */
-
-// Helper to resolve storage IDs to URLs for reference images
-async function resolveReferenceImages(
-	ctx: { storage: { getUrl: (id: Id<"_storage">) => Promise<string | null> } },
-	images: string[] | undefined
-): Promise<string[] | undefined> {
-	if (!images || images.length === 0) return undefined;
-	
-	const resolvedUrls = await Promise.all(
-		images.map(async (img) => {
-			// If already a URL, return as-is
-			if (img.startsWith("http")) return img;
-			// Otherwise it's a storage ID - resolve it
-			try {
-				const url = await ctx.storage.getUrl(img as unknown as Id<"_storage">);
-				return url || img; // Fallback to original if resolution fails
-			} catch {
-				return img;
-			}
-		})
-	);
-	
-	return resolvedUrls.filter((url): url is string => url !== null);
-}
 
 // List assets within an Organization
 export const list = query({
@@ -71,7 +48,7 @@ export const list = query({
 		const assetsWithUrls = await Promise.all(
 			assets.map(async (asset) => ({
 				...asset,
-				referenceImages: await resolveReferenceImages(ctx, asset.referenceImages),
+				referenceImages: await resolveStorageUrls(ctx, asset.referenceImages),
 			}))
 		);
 
@@ -116,7 +93,7 @@ export const listAll = query({
 		const assetsWithUrls = await Promise.all(
 			allAssets.map(async (asset) => ({
 				...asset,
-				referenceImages: await resolveReferenceImages(ctx, asset.referenceImages),
+				referenceImages: await resolveStorageUrls(ctx, asset.referenceImages),
 			}))
 		);
 
@@ -231,7 +208,7 @@ export const remove = mutation({
 
 		const asset = await ctx.db.get(args.id);
 		if (!asset)
-			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+			throw new ConvexError({ code: "NOT_FOUND", message: "Asset not found" });
 
 		const membership = await ctx.db
 			.query("organizationMembers")
@@ -241,6 +218,23 @@ export const remove = mutation({
 			.first();
 		if (!membership || membership.role === "viewer")
 			throw new ConvexError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		// Delete reference images from storage
+		if (asset.referenceImages && asset.referenceImages.length > 0) {
+			for (const imageUrl of asset.referenceImages) {
+				// Extract storage ID from URL if it's a Convex storage URL
+				// Format: https://xxx.convex.cloud/api/storage/{storageId}
+				const match = imageUrl.match(/\/api\/storage\/([a-zA-Z0-9_-]+)$/);
+				if (match) {
+					try {
+						await ctx.storage.delete(match[1] as Id<"_storage">);
+					} catch (e) {
+						// Ignore deletion errors - file may already be deleted
+						console.warn("Failed to delete storage file:", e);
+					}
+				}
+			}
+		}
 
 		await ctx.db.delete(args.id);
 	},

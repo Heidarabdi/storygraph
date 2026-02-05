@@ -106,7 +106,7 @@ export function NewCategoryModal({
                   setName(e.target.value)
                 }
                 placeholder="e.g. Characters, Locations, Props"
-                className="h-auto rounded-none border-border border-x-0 border-t-0 border-b-2 bg-transparent p-0 pb-4 font-serif text-2xl italic shadow-none focus-visible:border-primary focus-visible:ring-0"
+                className="h-auto! rounded-none border-border border-x-0 border-t-0 border-b-2 bg-transparent px-0 py-0 pb-0 font-serif text-2xl! italic leading-none shadow-none focus-visible:border-primary focus-visible:ring-0"
                 autoFocus
               />
             </div>

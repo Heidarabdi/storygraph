@@ -44,7 +44,7 @@ export const viewer = query({
 export const update = mutation({
 	args: {
 		name: v.optional(v.string()),
-		image: v.optional(v.id("_storage")),
+		image: v.optional(v.string()),
 		bio: v.optional(v.string()),
 		role: v.optional(v.string()),
 		showInDirectory: v.optional(v.boolean()),

@@ -2,6 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { ConvexError } from "convex/values";
+import { resolveStorageUrl } from "./lib/storage";
 
 // Role type for organization members
 const orgMemberRole = v.union(
@@ -84,19 +85,22 @@ export const getMembers = query({
 		const members = await Promise.all(
 			memberships.map(async (membership) => {
 				const user = await ctx.db.get(membership.userId);
-				return user
-					? {
-							id: membership._id,
-							userId: user._id,
-							name: user.name || user.email || "Unknown",
-							email: user.email || "",
-							role: membership.role,
-							avatar:
-								user.image ||
-								`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
-							status: "Active" as const,
-						}
-					: null;
+				if (!user) return null;
+				
+				// Resolve avatar URL (handles both storage IDs and URLs)
+				const resolvedAvatar = await resolveStorageUrl(ctx, user.image);
+				
+				return {
+					id: membership._id,
+					userId: user._id,
+					name: user.name || user.email || "Unknown",
+					email: user.email || "",
+					role: membership.role,
+					avatar:
+						resolvedAvatar ||
+						`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
+					status: "Active" as const,
+				};
 			}),
 		);
 

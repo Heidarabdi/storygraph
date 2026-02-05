@@ -2,25 +2,9 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { validateDescription, validateName } from "./lib/validation";
+import { resolveStorageUrl } from "./lib/storage";
 
 import type { Id } from "./_generated/dataModel";
-
-// Helper to resolve storage ID to URL
-async function resolveThumbnailUrl(
-	ctx: { storage: { getUrl: (id: Id<"_storage">) => Promise<string | null> } },
-	thumbnail: string | undefined
-): Promise<string | undefined> {
-	if (!thumbnail) return undefined;
-	// If already a URL, return as-is
-	if (thumbnail.startsWith("http")) return thumbnail;
-	// Otherwise it's a storage ID - resolve it
-	try {
-		const url = await ctx.storage.getUrl(thumbnail as unknown as Id<"_storage">);
-		return url || undefined;
-	} catch {
-		return undefined;
-	}
-}
 
 // List projects for a specific organization
 export const list = query({
@@ -50,7 +34,7 @@ export const list = query({
 		const projectsWithUrls = await Promise.all(
 			projects.map(async (project) => ({
 				...project,
-				thumbnail: await resolveThumbnailUrl(ctx, project.thumbnail),
+				thumbnail: (await resolveStorageUrl(ctx, project.thumbnail)) || undefined,
 			}))
 		);
 
@@ -183,7 +167,7 @@ export const getRecent = query({
 		const projectsWithUrls = await Promise.all(
 			projects.map(async (project) => ({
 				...project,
-				thumbnail: await resolveThumbnailUrl(ctx, project.thumbnail),
+				thumbnail: (await resolveStorageUrl(ctx, project.thumbnail)) || undefined,
 			}))
 		);
 
@@ -257,6 +241,21 @@ export const remove = mutation({
 				await ctx.db.delete(frame._id);
 			}
 			await ctx.db.delete(scene._id);
+		}
+
+		// Delete thumbnail from storage if it exists
+		if (project.thumbnail) {
+			// Extract storage ID from URL if it's a Convex storage URL
+			// Format: https://xxx.convex.cloud/api/storage/{storageId}
+			const match = project.thumbnail.match(/\/api\/storage\/([a-zA-Z0-9_-]+)$/);
+			if (match) {
+				try {
+					await ctx.storage.delete(match[1] as Id<"_storage">);
+				} catch (e) {
+					// Ignore deletion errors - file may already be deleted
+					console.warn("Failed to delete storage file:", e);
+				}
+			}
 		}
 
 		// 3. Delete the project

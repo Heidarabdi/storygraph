@@ -2,7 +2,7 @@ import { api } from "@storygraph/backend/convex/_generated/api";
 import type { Id } from "@storygraph/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { ImagePlus, X, Loader2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,48 +14,65 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useFileUpload } from "@/hooks/useFileUpload";
 
-interface NewProjectModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  orgId: string | null;
+interface Project {
+  _id: string;
+  name: string;
+  description?: string;
+  thumbnail?: string;
 }
 
-export function NewProjectModal({
+interface EditProjectModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  project: Project;
+}
+
+export function EditProjectModal({
   isOpen,
   onClose,
-  orgId,
-}: NewProjectModalProps) {
-  const [name, setName] = useState("");
+  project,
+}: EditProjectModalProps) {
+  const [name, setName] = useState(project.name);
+  const [description, setDescription] = useState(project.description || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    project.thumbnail || null,
+  );
   const [uploadedThumbnailUrl, setUploadedThumbnailUrl] = useState<
     string | null
-  >(null);
+  >(project.thumbnail || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const createProject = useMutation(api.projects.create);
+  const updateProject = useMutation(api.projects.update);
   const { upload, isUploading } = useFileUpload();
+
+  // Sync form state when project changes
+  useEffect(() => {
+    setName(project.name);
+    setDescription(project.description || "");
+    setPreviewImage(project.thumbnail || null);
+    setUploadedThumbnailUrl(project.thumbnail || null);
+  }, [project]);
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Show preview immediately
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewImage(reader.result as string);
     };
     reader.readAsDataURL(file);
 
-    // Upload the file
     try {
       const { storageId, url } = await upload(file);
       setUploadedThumbnailUrl(url || storageId);
     } catch (error) {
       console.error("Failed to upload thumbnail:", error);
-      setPreviewImage(null);
+      setPreviewImage(project.thumbnail || null);
     }
   };
 
@@ -69,44 +86,34 @@ export function NewProjectModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !orgId) return;
+    if (!name.trim()) return;
 
     setIsSubmitting(true);
     try {
-      await createProject({
-        name,
-        orgId: orgId as Id<"organizations">,
+      await updateProject({
+        projectId: project._id as Id<"projects">,
+        name: name.trim(),
+        description: description.trim() || undefined,
         thumbnail: uploadedThumbnailUrl || undefined,
       });
-      // Reset and close
-      setName("");
-      setPreviewImage(null);
-      setUploadedThumbnailUrl(null);
       onClose();
     } catch (error) {
-      console.error("Failed to create project:", error);
+      console.error("Failed to update project:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleClose = () => {
-    setName("");
-    setPreviewImage(null);
-    setUploadedThumbnailUrl(null);
-    onClose();
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[calc(100%-2rem)] max-w-md rounded-none border-border p-0 sm:w-full">
         <form onSubmit={handleSubmit} className="p-6 md:p-8">
           <DialogHeader>
             <DialogTitle className="font-serif text-3xl text-primary italic tracking-tight">
-              New Journey
+              Edit Project
             </DialogTitle>
             <DialogDescription className="mt-2 font-serif text-[11px] text-muted-foreground uppercase italic tracking-widest">
-              Direct the foundation of your next cinematic beat.
+              Update your project details.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-8">
@@ -116,15 +123,36 @@ export function NewProjectModal({
                 htmlFor="name"
                 className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-[0.4em]"
               >
-                {"Project Identifier //"}
+                {"Project Name //"}
               </Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Neon Protocol // SC_01"
-                className="h-auto! rounded-none border-border border-x-0 border-t-0 border-b-2 bg-transparent px-0 py-0 pb-0 font-serif text-2xl! italic leading-none shadow-none focus-visible:border-primary focus-visible:ring-0"
+                placeholder="Project name"
+                className="h-10 rounded-none border-border border-x-0 border-t-0 border-b-2 bg-transparent px-0 pt-5 pb-1 font-serif text-xl italic shadow-none focus-visible:border-primary focus-visible:ring-0"
                 autoFocus
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-3">
+              <Label
+                htmlFor="description"
+                className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-[0.4em]"
+              >
+                {"Description //"}
+                <span className="ml-2 text-muted-foreground/40 normal-case tracking-normal">
+                  optional
+                </span>
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Project description..."
+                rows={3}
+                className="rounded-none border-border border-x-0 border-t-0 border-b bg-transparent px-0 py-0 pb-0 text-sm leading-normal shadow-none resize-none focus-visible:border-primary focus-visible:ring-0"
               />
             </div>
 
@@ -180,32 +208,27 @@ export function NewProjectModal({
               />
             </div>
           </div>
-          <DialogFooter className="mt-6 flex-col gap-3 sm:flex-row sm:justify-end">
-            {!orgId && (
-              <p className="w-full text-center font-bold text-[9px] text-red-500 uppercase tracking-widest sm:text-left">
-                ⚠️ No Active Organization Selected
-              </p>
-            )}
+          <DialogFooter className="flex-col gap-3 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="ghost"
-              onClick={handleClose}
+              onClick={onClose}
               className="h-12 rounded-none px-8 font-bold text-[10px] uppercase tracking-widest transition-all hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || isUploading || !name.trim() || !orgId}
+              disabled={isSubmitting || isUploading || !name.trim()}
               className="h-12 rounded-none px-10 font-bold text-[10px] uppercase tracking-widest shadow-xl transition-all"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <div className="h-2 w-2 animate-ping rounded-full bg-accent" />
-                  Synthesizing...
+                  Saving...
                 </span>
               ) : (
-                "Initialize Project"
+                "Save Changes"
               )}
             </Button>
           </DialogFooter>

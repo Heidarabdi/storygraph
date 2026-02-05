@@ -44,8 +44,8 @@ export default function ProfileSettings() {
     if (!file) return;
 
     try {
-      const { storageId } = await upload(file);
-      await updateUser({ image: storageId });
+      const { url, storageId } = await upload(file);
+      await updateUser({ image: url || storageId });
     } catch (error) {
       console.error("Failed to upload avatar:", error);
     }

@@ -1,8 +1,7 @@
 import { api } from "@storygraph/backend/convex/_generated/api";
 import type { Id } from "@storygraph/backend/convex/_generated/dataModel";
-import { useMutation } from "convex/react";
-import { ImagePlus, X, Loader2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,54 +13,90 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ImagePlus, X, Loader2 } from "lucide-react";
 import { useFileUpload } from "@/hooks/useFileUpload";
 
-interface NewProjectModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  orgId: string | null;
+interface Asset {
+  _id: string;
+  name: string;
+  description?: string;
+  categoryId: string;
+  orgId: string;
+  referenceImages?: string[];
 }
 
-export function NewProjectModal({
+interface EditAssetModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  asset: Asset;
+}
+
+export function EditAssetModal({
   isOpen,
   onClose,
-  orgId,
-}: NewProjectModalProps) {
-  const [name, setName] = useState("");
+  asset,
+}: EditAssetModalProps) {
+  const [name, setName] = useState(asset.name);
+  const [description, setDescription] = useState(asset.description || "");
+  const [selectedCategoryId, setSelectedCategoryId] = useState(
+    asset.categoryId,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [uploadedThumbnailUrl, setUploadedThumbnailUrl] = useState<
-    string | null
-  >(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    asset.referenceImages?.[0] || null,
+  );
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(
+    asset.referenceImages?.[0] || null,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const createProject = useMutation(api.projects.create);
+  const updateAsset = useMutation(api.assets.update);
   const { upload, isUploading } = useFileUpload();
+
+  const categories = useQuery(
+    api.assetCategories.listAll,
+    asset.orgId ? { orgId: asset.orgId as Id<"organizations"> } : "skip",
+  );
+
+  // Sync form state when asset changes
+  useEffect(() => {
+    setName(asset.name);
+    setDescription(asset.description || "");
+    setSelectedCategoryId(asset.categoryId);
+    setPreviewImage(asset.referenceImages?.[0] || null);
+    setUploadedImageUrl(asset.referenceImages?.[0] || null);
+  }, [asset]);
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Show preview immediately
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewImage(reader.result as string);
     };
     reader.readAsDataURL(file);
 
-    // Upload the file
     try {
       const { storageId, url } = await upload(file);
-      setUploadedThumbnailUrl(url || storageId);
+      setUploadedImageUrl(url || storageId);
     } catch (error) {
-      console.error("Failed to upload thumbnail:", error);
-      setPreviewImage(null);
+      console.error("Failed to upload image:", error);
+      setPreviewImage(asset.referenceImages?.[0] || null);
     }
   };
 
   const handleRemoveImage = () => {
     setPreviewImage(null);
-    setUploadedThumbnailUrl(null);
+    setUploadedImageUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -69,76 +104,115 @@ export function NewProjectModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !orgId) return;
+    if (!name.trim() || !selectedCategoryId) return;
 
     setIsSubmitting(true);
     try {
-      await createProject({
-        name,
-        orgId: orgId as Id<"organizations">,
-        thumbnail: uploadedThumbnailUrl || undefined,
+      await updateAsset({
+        id: asset._id as Id<"assets">,
+        name: name.trim(),
+        description: description.trim() || undefined,
+        categoryId: selectedCategoryId as Id<"assetCategories">,
+        referenceImages: uploadedImageUrl ? [uploadedImageUrl] : undefined,
       });
-      // Reset and close
-      setName("");
-      setPreviewImage(null);
-      setUploadedThumbnailUrl(null);
       onClose();
     } catch (error) {
-      console.error("Failed to create project:", error);
+      console.error("Failed to update asset:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleClose = () => {
-    setName("");
-    setPreviewImage(null);
-    setUploadedThumbnailUrl(null);
-    onClose();
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[calc(100%-2rem)] max-w-md rounded-none border-border p-0 sm:w-full">
         <form onSubmit={handleSubmit} className="p-6 md:p-8">
           <DialogHeader>
             <DialogTitle className="font-serif text-3xl text-primary italic tracking-tight">
-              New Journey
+              Edit Asset
             </DialogTitle>
             <DialogDescription className="mt-2 font-serif text-[11px] text-muted-foreground uppercase italic tracking-widest">
-              Direct the foundation of your next cinematic beat.
+              Update your asset details.
             </DialogDescription>
           </DialogHeader>
+
           <div className="grid gap-6 py-8">
-            {/* Project Name */}
+            {/* Asset Name */}
             <div className="space-y-4">
               <Label
                 htmlFor="name"
                 className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-[0.4em]"
               >
-                {"Project Identifier //"}
+                {"Asset Name //"}
               </Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Neon Protocol // SC_01"
+                placeholder="Asset name"
                 className="h-auto! rounded-none border-border border-x-0 border-t-0 border-b-2 bg-transparent px-0 py-0 pb-0 font-serif text-2xl! italic leading-none shadow-none focus-visible:border-primary focus-visible:ring-0"
                 autoFocus
               />
             </div>
 
-            {/* Thumbnail Upload */}
+            {/* Category Selector */}
+            <div className="space-y-4">
+              <Label className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-[0.4em]">
+                {"Category //"}
+              </Label>
+              <Select
+                value={selectedCategoryId}
+                onValueChange={setSelectedCategoryId}
+              >
+                <SelectTrigger className="h-12 rounded-none border-border font-bold text-[10px] uppercase tracking-widest bg-muted/20 focus:ring-0 focus:ring-offset-0">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent className="rounded-none border-border">
+                  {categories?.map((cat) => (
+                    <SelectItem
+                      key={cat._id}
+                      value={cat._id}
+                      className="font-bold text-[10px] uppercase tracking-widest"
+                    >
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-3">
+              <Label
+                htmlFor="description"
+                className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-[0.4em]"
+              >
+                {"Description //"}
+                <span className="ml-2 text-muted-foreground/40 normal-case tracking-normal">
+                  optional
+                </span>
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Asset description..."
+                rows={3}
+                className="rounded-none border-border border-x-0 border-t-0 border-b bg-transparent px-0 py-0 pb-1 text-sm shadow-none resize-none focus-visible:border-primary focus-visible:ring-0"
+              />
+            </div>
+
+            {/* Reference Image Upload */}
             <div className="space-y-3">
               <Label className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-[0.4em]">
-                {"Thumbnail //"}
+                {"Visual Reference //"}
                 <span className="ml-2 text-muted-foreground/40 normal-case tracking-normal">
                   optional
                 </span>
               </Label>
 
               {previewImage ? (
-                <div className="relative aspect-[2.39/1] w-full overflow-hidden border border-border bg-muted/20">
+                <div className="relative w-32 h-32 overflow-hidden border border-border bg-muted/20">
                   <img
                     src={previewImage}
                     alt="Preview"
@@ -146,15 +220,15 @@ export function NewProjectModal({
                   />
                   {isUploading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                      <Loader2 className="h-6 w-6 animate-spin text-white" />
+                      <Loader2 className="h-5 w-5 animate-spin text-white" />
                     </div>
                   )}
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="absolute top-2 right-2 p-1.5 bg-background/80 hover:bg-background border border-border text-foreground transition-colors"
+                    className="absolute top-1 right-1 p-1 bg-background/80 hover:bg-background border border-border text-foreground transition-colors"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
               ) : (
@@ -166,7 +240,7 @@ export function NewProjectModal({
                 >
                   <ImagePlus className="h-5 w-5 text-muted-foreground/40" />
                   <span className="font-bold text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                    Upload Thumbnail
+                    Upload Reference
                   </span>
                 </button>
               )}
@@ -180,32 +254,33 @@ export function NewProjectModal({
               />
             </div>
           </div>
-          <DialogFooter className="mt-6 flex-col gap-3 sm:flex-row sm:justify-end">
-            {!orgId && (
-              <p className="w-full text-center font-bold text-[9px] text-red-500 uppercase tracking-widest sm:text-left">
-                ⚠️ No Active Organization Selected
-              </p>
-            )}
+
+          <DialogFooter className="flex-col gap-3 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="ghost"
-              onClick={handleClose}
+              onClick={onClose}
               className="h-12 rounded-none px-8 font-bold text-[10px] uppercase tracking-widest transition-all hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || isUploading || !name.trim() || !orgId}
+              disabled={
+                isSubmitting ||
+                isUploading ||
+                !name.trim() ||
+                !selectedCategoryId
+              }
               className="h-12 rounded-none px-10 font-bold text-[10px] uppercase tracking-widest shadow-xl transition-all"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <div className="h-2 w-2 animate-ping rounded-full bg-accent" />
-                  Synthesizing...
+                  Saving...
                 </span>
               ) : (
-                "Initialize Project"
+                "Save Changes"
               )}
             </Button>
           </DialogFooter>

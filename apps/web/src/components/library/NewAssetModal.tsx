@@ -155,7 +155,7 @@ export function NewAssetModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Luna // Protagonist"
-                className="h-auto rounded-none border-border border-x-0 border-t-0 border-b-2 bg-transparent p-0 pb-4 font-serif text-2xl italic shadow-none focus-visible:border-primary focus-visible:ring-0"
+                className="h-auto! rounded-none border-border border-x-0 border-t-0 border-b-2 bg-transparent px-0 py-0 pb-0 font-serif text-2xl! italic leading-none shadow-none focus-visible:border-primary focus-visible:ring-0"
                 autoFocus
               />
             </div>
@@ -210,7 +210,7 @@ export function NewAssetModal({
                   overflowWrap: "break-word",
                   whiteSpace: "pre-wrap",
                 }}
-                className="rounded-none border-border border-x-0 border-t-0 border-b bg-transparent p-0 pb-4 text-sm shadow-none resize-none focus-visible:border-primary focus-visible:ring-0 [field-sizing:initial]"
+                className="rounded-none border-border border-x-0 border-t-0 border-b bg-transparent px-0 py-0 pb-1 text-sm shadow-none resize-none focus-visible:border-primary focus-visible:ring-0 [field-sizing:initial]"
               />
             </div>
 

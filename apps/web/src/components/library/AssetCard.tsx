@@ -1,10 +1,5 @@
-import {
-  MoreHorizontal,
-  Trash2,
-  Copy,
-  Edit2,
-  ExternalLink,
-} from "lucide-react";
+import { MoreHorizontal, Trash2, Edit2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,14 +8,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@storygraph/backend/convex/_generated/api";
 import type { Id } from "@storygraph/backend/convex/_generated/dataModel";
+import { EditAssetModal } from "./EditAssetModal";
 
 interface Asset {
   _id: string;
   name: string;
   categoryId: string;
+  orgId: string;
   referenceImages?: string[];
   description?: string;
 }
@@ -32,6 +30,7 @@ interface AssetCardProps {
 }
 
 export function AssetCard({ asset, viewMode, orgId }: AssetCardProps) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const removeAsset = useMutation(api.assets.remove);
 
   // Fetch category name - only if orgId is provided
@@ -43,178 +42,184 @@ export function AssetCard({ asset, viewMode, orgId }: AssetCardProps) {
   const categoryName = category?.name || "Asset";
 
   // Get first reference image or fallback to generated avatar
+  // Note: Some assets may have 'image' field from legacy data, check both
   const displayImage =
     asset.referenceImages?.[0] ||
+    (asset as any).image ||
     `https://api.dicebear.com/7.x/shapes/svg?seed=${asset.name}`;
+
+  const handleDelete = () => {
+    removeAsset({ id: asset._id as Id<"assets"> });
+  };
 
   if (viewMode === "list") {
     return (
-      <div className="group grid cursor-pointer grid-cols-12 items-center gap-6 bg-card p-4 md:p-6 transition-all hover:bg-muted/30 border-b border-border/50 border-x">
-        <div className="col-span-2 md:col-span-1 aspect-square h-16 w-16 md:h-20 md:w-20 border border-border bg-muted overflow-hidden">
-          <img
-            src={displayImage}
-            alt={asset.name}
-            className="h-full w-full object-cover saturate-50 transition-all duration-500 group-hover:saturate-100 group-hover:scale-110"
-          />
-        </div>
-        <div className="col-span-10 md:col-span-11 flex items-center justify-between pl-2 md:pl-4">
-          <div className="space-y-1">
-            <h4 className="font-bold text-xs md:text-sm text-primary uppercase tracking-[0.15em]">
-              {asset.name}
-            </h4>
-            <p className="font-serif text-[10px] md:text-xs text-muted-foreground italic lowercase">
-              {categoryName} // sg-manifest-entry-{asset._id.slice(-8)}
-            </p>
+      <>
+        <div className="group grid cursor-pointer grid-cols-12 items-center gap-6 bg-card p-4 md:p-6 transition-all hover:bg-muted/30 border-b border-border/50 border-x">
+          <div className="col-span-2 md:col-span-1 aspect-square h-16 w-16 md:h-20 md:w-20 border border-border bg-muted overflow-hidden">
+            <img
+              src={displayImage}
+              alt={asset.name}
+              className="h-full w-full object-cover saturate-50 transition-all duration-500 group-hover:saturate-100 group-hover:scale-110"
+            />
           </div>
-
-          <div className="flex items-center gap-6 md:gap-12">
-            <div className="hidden md:block">
-              <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mb-1">
-                Access
-              </p>
-              <p className="text-xs font-bold text-primary uppercase tracking-tighter">
-                Global
+          <div className="col-span-10 md:col-span-11 flex items-center justify-between pl-2 md:pl-4">
+            <div className="space-y-1">
+              <h4 className="font-bold text-xs md:text-sm text-primary uppercase tracking-[0.15em]">
+                {asset.name}
+              </h4>
+              <p className="font-serif text-[10px] md:text-xs text-muted-foreground italic lowercase">
+                {categoryName}
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 hover:bg-muted hover:text-primary transition-colors"
+            <div className="flex items-center gap-6 md:gap-12">
+              <div className="hidden md:block">
+                <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mb-1">
+                  Access
+                </p>
+                <p className="text-xs font-bold text-primary uppercase tracking-tighter">
+                  Global
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <MoreHorizontal size={16} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="rounded-none border-border"
                   >
-                    <MoreHorizontal size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="rounded-none border-border"
-                >
-                  <DropdownMenuItem className="flex items-center gap-3 px-4 py-2 font-bold text-[10px] uppercase tracking-widest">
-                    <ExternalLink size={16} /> View Details
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="flex items-center gap-3 px-4 py-2 font-bold text-[10px] uppercase tracking-widest text-red-500 hover:text-red-600"
-                    onClick={() =>
-                      removeAsset({ id: asset._id as Id<"assets"> })
-                    }
-                  >
-                    <Trash2 size={16} /> Purge
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuItem
+                      className="flex items-center gap-3 px-4 py-2 font-bold text-[10px] uppercase tracking-widest"
+                      onClick={() => setIsEditModalOpen(true)}
+                    >
+                      <Edit2 size={16} /> Edit Asset
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <ConfirmDeleteDialog
+                  title={`Delete "${asset.name}"?`}
+                  description="This will permanently remove this asset from your library. This action cannot be undone."
+                  onConfirm={handleDelete}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-muted text-red-500 hover:text-red-600"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+
+        <EditAssetModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          asset={asset}
+        />
+      </>
     );
   }
 
   // Grid view - Exactly 420px height, vertical layout
   return (
-    <div className="group h-[420px] relative border border-border bg-card transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl flex flex-col overflow-hidden">
-      {/* Portrait Image Area - Fills the top portion */}
-      <div className="relative flex-1 min-h-0 overflow-hidden bg-neutral-200">
-        <img
-          src={displayImage}
-          alt={asset.name}
-          className="h-full w-full object-cover saturate-[0.4] transition-transform duration-700 group-hover:scale-105 group-hover:saturate-100"
-        />
+    <>
+      <div className="group h-[420px] relative border border-border bg-card transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl flex flex-col overflow-hidden">
+        {/* Portrait Image Area - Fills the top portion */}
+        <div className="relative flex-1 min-h-0 overflow-hidden bg-neutral-200">
+          <img
+            src={displayImage}
+            alt={asset.name}
+            className="h-full w-full object-cover saturate-[0.4] transition-transform duration-700 group-hover:scale-105 group-hover:saturate-100"
+          />
 
-        {/* Category Label Overlay */}
-        <div className="absolute top-4 left-4">
-          <div className="bg-background/80 backdrop-blur-md border border-border px-2 py-1">
-            <span className="font-bold text-[8px] text-primary uppercase tracking-[0.2em]">
-              {categoryName}
-            </span>
-          </div>
-        </div>
-
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
-          <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-white/10 backdrop-blur-md">
-            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
-          </div>
-        </div>
-      </div>
-
-      {/* Asset Info - Manifesto Style */}
-      <div className="flex flex-col p-6 shrink-0 bg-card border-t border-border">
-        <div className="space-y-4 mb-2">
-          {/* Identity Header */}
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-[13px] text-primary uppercase tracking-[0.3em] transition-colors group-hover:text-accent">
-              {asset.name}
-            </h3>
-            <span className="font-serif text-[10px] text-muted-foreground/40 italic">
-              #{(asset._id.match(/\d/g) || []).slice(0, 4).join("") || "7721"}
-            </span>
-          </div>
-
-          <div className="h-px w-full bg-border/40" />
-        </div>
-
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex flex-col gap-1">
-            <span className="font-bold text-[8px] text-muted-foreground uppercase tracking-widest opacity-60">
-              MANIFEST STATUS
-            </span>
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-              <span className="font-bold text-[9px] text-primary uppercase tracking-tighter">
-                ACTIVE DNA
+          {/* Category Label Overlay */}
+          <div className="absolute top-4 left-4">
+            <div className="bg-background/80 backdrop-blur-md border border-border px-3 py-1.5">
+              <span className="font-bold text-xs text-primary uppercase tracking-wide">
+                {categoryName}
               </span>
             </div>
           </div>
-          <div className="text-right flex flex-col gap-1">
-            <span className="font-bold text-[8px] text-muted-foreground uppercase tracking-widest opacity-60">
-              ACCESS
-            </span>
-            <span className="font-bold text-[9px] text-primary/40 uppercase tracking-[0.2em]">
-              {categoryName}
-            </span>
+
+          {/* Top Actions */}
+          <div className="absolute top-4 right-4 z-20 flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 border border-white/20 bg-black/40 text-white backdrop-blur hover:bg-black/70 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  type="button"
+                >
+                  <MoreHorizontal size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="rounded-none border-border"
+              >
+                <DropdownMenuItem
+                  className="flex items-center gap-3 px-4 py-2 font-bold text-[10px] uppercase tracking-widest"
+                  onClick={() => setIsEditModalOpen(true)}
+                >
+                  <Edit2 size={16} /> Edit Asset
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <ConfirmDeleteDialog
+              title={`Delete "${asset.name}"?`}
+              description="This will permanently remove this asset from your library. This action cannot be undone."
+              onConfirm={handleDelete}
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 border border-white/20 bg-black/40 text-red-400 backdrop-blur hover:bg-red-600/80 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  type="button"
+                >
+                  <Trash2 size={16} />
+                </Button>
+              }
+            />
           </div>
+        </div>
+
+        {/* Asset Info Footer */}
+        <div className="p-5 border-t border-border">
+          <h4 className="font-bold text-sm text-primary uppercase tracking-wide mb-1">
+            {asset.name}
+          </h4>
+          {asset.description && (
+            <p className="font-serif text-xs text-muted-foreground italic line-clamp-2">
+              {asset.description}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Top Actions */}
-      <div className="absolute top-4 right-4 z-20 flex gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 border border-white/20 bg-black/40 text-white backdrop-blur hover:bg-black/60 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
-              type="button"
-            >
-              <MoreHorizontal size={14} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="rounded-none border-border"
-          >
-            <DropdownMenuItem className="flex items-center gap-3 px-4 py-2 font-bold text-[10px] uppercase tracking-widest">
-              <Copy size={16} /> Clone DNA
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-3 px-4 py-2 font-bold text-[10px] uppercase tracking-widest">
-              <Edit2 size={16} /> Modify Manifest
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="flex items-center gap-3 px-4 py-2 font-bold text-[10px] uppercase tracking-widest text-red-500"
-              onClick={() => {
-                if (confirm("Purge this asset from the manifest?")) {
-                  removeAsset({ id: asset._id as Id<"assets"> });
-                }
-              }}
-            >
-              <Trash2 size={16} /> Purge
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
+      <EditAssetModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        asset={asset}
+      />
+    </>
   );
 }
